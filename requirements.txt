@@ -1,3 +1,5 @@
+Additionally to the pip freeze you also need the pigpio library.
+
 asgiref==3.3.4
 asn1crypto==0.24.0
 astroid==2.1.0
