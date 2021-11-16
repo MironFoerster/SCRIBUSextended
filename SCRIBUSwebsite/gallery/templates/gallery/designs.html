@@ -1,0 +1,89 @@
+{% extends 'base/base.html' %}
+
+{% block beforeloadscript %}
+const drawPreview = (canvas_id, elements) => {
+    const preview_cvs = document.getElementById(canvas_id);
+    const ctx = preview_cvs.getContext("2d");
+    
+    console.log(elements);
+    
+    for (let el of elements) {
+    ctx.save();
+
+    //do the transformations
+    ctx.translate(el.origin.x, el.origin.y);
+    ctx.scale(el.scale, el.scale);
+    ctx.rotate(el.rotation*Math.PI/180);
+
+    // make path settings
+    ctx.beginPath();
+    ctx.lineCap = 'round'; ///nice trick! makes partpaths with only one point appear as a point on the canvas
+    ctx.strokeStyle = "black";
+    ctx.lineJoin = 'round';
+    ctx.lineWidth = 4 / el.scale;
+
+    // draw the path
+    for (let partpath of el.path) {
+      ctx.moveTo(partpath[0][0], partpath[0][1]);
+      for (let point of partpath) {
+        ctx.lineTo(point[0], point[1]);
+      }
+    }
+    ctx.stroke();
+    ctx.restore();
+  }
+}
+{% endblock %}
+
+{% block pagename %} - Designs{% endblock %}
+
+{% block main %}
+{% if user.is_authenticated %}
+<div class="outer-designs-container">
+    <p>Your Designs:</p>
+    <div id="private_designs" class="designs-container">
+        {% if user.design_set.all %}
+            {% for i in user.design_set.all %}
+                <div id="{{ i.name }}" class="card design-card" onclick="selectDesign(event);">
+                    <p>{{ i.name }}</p>
+                    <canvas id="{{ i.name }}_preview" class="card-canvas" width=1000 height=1000>canvas not supported.</canvas>
+                    <script>drawPreview('{{ i.name }}_preview', {{ i.elements.elements|safe }})</script>
+                </div>
+            {% endfor %}
+        {% else %}
+            <p>You dont have any Private Designs</p>
+        {% endif %}
+
+    </div>
+</div>
+{% endif %}
+
+<div class="outer-designs-container">
+    <p>Public Designs:</p>
+    <div id="public_designs" class="designs-container">
+        {% for i in public_designs.all %}
+            <div id="{{ i.name }}" class="card design-card" onclick="selectDesign(event);">
+                <p>{{ i.name }}</p>
+                <canvas id="{{ i.name }}_preview" class="card-canvas" width=1000 height=1000>canvas not supported.</canvas>
+                <script>drawPreview('{{ i.name }}_preview', {{ i.elements.elements|safe }})</script>
+            </div>
+        {% endfor %}
+
+    </div>
+</div>
+<a href="{% url 'draw:index' %}" style="color:rgb(131,29,196);text-decoration:none;font-family:serif;font-size:20px;">
+<div class="designs-control-container">
+    
+    <button id="useoriginal_btn">Use Original</button>
+    <button id="usegrouped_btn">Use Grouped</button>
+    <button>Back to Draw</button>
+    
+</div>
+</a>
+
+{% endblock %}
+
+{% block scriptsource %}
+{% load static %}
+{% static 'base/js/designs.js' %}
+{% endblock %}

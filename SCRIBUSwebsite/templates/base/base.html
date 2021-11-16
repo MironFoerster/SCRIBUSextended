@@ -1,0 +1,71 @@
+{% load static %}
+{% csrf_token %}
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <title>SCRIBUS</title>
+    <meta name="author" content="Miron Förster">
+    <!--<meta name="base" content="">-->
+    <meta name="viewport"content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="The SCRIBUS robot website">
+    <meta name="keywords" content="handwrite, AI, robot, plotter, draw">
+    <link rel="stylesheet" href="{% static 'base/css/base.css' %}">
+    <!--<link rel="icon" href="img/logo/logo_hausDesNikolaus.ico" type="image/icon">-->
+    <script>
+      toggleMenu = () => {
+        let m = document.getElementById("menu");
+        console.log(m.classList)
+        m.classList.toggle('hidden');
+        }
+    
+    </script>
+    <script>{% block beforeloadscript %}{% endblock %}</script>
+  </head>
+
+  <body>
+
+    <header>
+      
+      <div id="topbar">
+        <a href="{% url 'home:index' %}" id="scribusHome">SCRIBUS{% block pagename %}{% endblock %}</a>
+        <a id="hamburger" onclick="toggleMenu()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" class="bi bi-list" viewBox="0 0 16 16">
+            <path fill-rule="evenodd" d="M2.5 12a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5z"/>
+          </svg>
+        </a>
+      </div>
+      <div id="menu" class="hidden">
+        <a href="{% url 'home:index' %}">Home</a>
+        <a href="{% url 'draw:index' %}">Draw</a>
+        <a href="{% url 'gallery:designs' %}">Galery</a>
+        
+        {% if user.is_authenticated %}
+        <a href="{% url 'home:logout' %}">{{ user.username }} - Logout</a>
+        {% else %}
+        <a href="{% url 'home:login' %}">Login</a>
+        {% endif %}
+      </div>
+      
+    </header>
+
+    <div id="mf_wrapper">
+      <main>
+          {% block main %}
+          {% endblock %}
+      </main>
+
+      <footer>
+        <div class="footer__content">
+
+        </div>
+        <div class="footer_copyright">
+          <p>Copyright &copy 2021 <a href="mailto:miron.foerster@gmx.de">Miron Förster</a></p>
+        </div>
+      </footer>
+    </div>
+  </body>
+<!--  <script type="text/javascript" src="{% static 'jquery/jquery-3.6.0.min.js' %}"></script>-->
+
+<script type="text/javascript" src="{% block scriptsource %}{% endblock %}"></script>
+</html>

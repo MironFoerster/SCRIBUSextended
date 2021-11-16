@@ -1,0 +1,21 @@
+{% extends 'base/base.html' %}
+
+{% block pagename %} - Login{% endblock %}
+
+{% block main %}
+
+<form method="post" action="{% url 'home:login' %}">
+{% csrf_token %}
+
+    <input type="text" name='username' id="username_input" placeholder="BernhardDiener" oninput="username(event, all usernames)">
+    <input type="password" name='password' id="password_input" minlength="6" placeholder="Password">
+    <p id="designName_warning">This Name alre</p>
+    <button><input type="submit" value="login"></button>
+
+</form>
+{% endblock %}
+
+{% block scriptsource %}
+{% load static %}
+{% static 'base/js/login.js' %}
+{% endblock %}
