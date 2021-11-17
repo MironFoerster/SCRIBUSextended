@@ -346,6 +346,8 @@ const sbmtDrawing = () => {
         let name = null;
     }
     
+    console.log(save, name, global.elements);
+    
     // Wenn der Submit korrekt ist:
     if (submitValid) {
         // Sendet Name, elements_list und Speicheroption an den Server
