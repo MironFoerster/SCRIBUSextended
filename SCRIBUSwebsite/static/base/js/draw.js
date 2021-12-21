@@ -346,6 +346,8 @@ const sbmtDrawing = () => {
         let name = null;
     }
     
+    console.log(save, name, global.elements);
+    
     // Wenn der Submit korrekt ist:
     if (submitValid) {
         // Sendet Name, elements_list und Speicheroption an den Server
@@ -680,7 +682,7 @@ cvs_elem.addEventListener('touchend', Tend, false);
 
 // Helferfunktionen...
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-const getCookie = (name) => {
+const getCookie = (name) => { // kopiert von: https://docs.djangoproject.com/en/3.1/ref/csrf/#acquiring-the-token-if-csrf-use-sessions-and-csrf-cookie-httponly-are-false
     let cookieValue = null;
     if (document.cookie && document.cookie !== '') {
         const cookies = document.cookie.split(';');

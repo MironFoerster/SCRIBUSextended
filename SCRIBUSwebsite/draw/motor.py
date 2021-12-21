@@ -44,7 +44,7 @@ class Servo:
         
     # Verschiedene Funktionen zum Ansteuern des Servo-Motors
     def raise_pen(self):
-        pi.set_servo_pulsewidth(self.pwm_pin, 1200)
+        pi.set_servo_pulsewidth(self.pwm_pin, 1000)
         time.sleep(0.25)
 
     def lower_pen(self):
