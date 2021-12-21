@@ -4,6 +4,8 @@ from django.http import JsonResponse
 from .models import Shape
 from gallery.models import Design
 import json
+import threading
+from django.core.cache import cache
 from . import cmdList
 from . import control
 
@@ -31,12 +33,16 @@ def submit(request):
 
     # converting elements to SCode
     cmd_list = cmdList.fromElementsList(submitData['elements']['elements'])
-    
-    input('enter')
-    # instanciate the robot
-    scribus = control.Robot()
-    # draw the cmd_list
-    scribus.draw_cmd_list(cmd_list)
+    queue = cache.get('cmd_list_queue')
+    queue.append(cmd_list)
+    cache.set('cmd_list_queue', queue)
+
+    if len(queue) == 1:
+        # instanciate the robot
+        scribus = control.Robot()
+        t = threading.Thread(target=scribus.draw_cmd_list_queue)
+        # draw the cmd_list
+        t.start()
     
     return redirect('index')
 

@@ -3,6 +3,8 @@ from . import motor
 import RPi.GPIO as gpio
 import math
 import time
+from django.core.cache import cache
+
 
 # Deaktiviert Warnungen
 gpio.setwarnings(False)
@@ -188,27 +190,34 @@ class Robot:
         self.my.set_enable_state(1)
         
 
-    def draw_cmd_list(self, cmd_list): # Nimmt eine cmd_list entgegen und lässt den Roboter diese Zeichnen
-        self.enable()
-        # Hebt den Stift für die Bewegung zum Nullpunkt und aktualisiert State-Variable
-        self.mservo.raise_pen()
-        self.current_state.update({'mode': 'moveto'})
-        self.home_pos()
-        
-        # Durchläuft jeden Command in der cmd_list
-        for cmd in cmd_list:
-            # Aktualisiert den Pen-State, wenn nötig
-            if self.current_state['mode'] != cmd['mode']:
-                if cmd['mode'] == 'lineto':
-                    self.mservo.lower_pen()
-                elif cmd['mode'] == 'moveto':
-                    self.mservo.raise_pen()
-                self.current_state['mode'] = cmd['mode']
-                
-            # Ruft Funktion auf, welche den Roboter zum gewünschten Punkt fahren lässt
-            self.linear_move(cmd)
-        # Hebt den Stift für die Bewegung zum Nullpunkt
-        self.mservo.raise_pen()
-        self.home_pos()
-        self.mservo.stop()
-        self.disable()
+    def draw_cmd_list_queue(self): # Nimmt eine cmd_list entgegen und lässt den Roboter diese Zeichnen
+        queue = cache.get('cmd_list_queue')
+        while queue != []:
+            cmd_list = queue.pop(0)
+            self.enable()
+            # Hebt den Stift für die Bewegung zum Nullpunkt und aktualisiert State-Variable
+            self.mservo.raise_pen()
+            self.current_state.update({'mode': 'moveto'})
+            self.home_pos()
+
+            # Durchläuft jeden Command in der cmd_list
+            for cmd in cmd_list:
+                # Aktualisiert den Pen-State, wenn nötig
+                if self.current_state['mode'] != cmd['mode']:
+                    if cmd['mode'] == 'lineto':
+                        self.mservo.lower_pen()
+                    elif cmd['mode'] == 'moveto':
+                        self.mservo.raise_pen()
+                    self.current_state['mode'] = cmd['mode']
+
+                # Ruft Funktion auf, welche den Roboter zum gewünschten Punkt fahren lässt
+                self.linear_move(cmd)
+            # Hebt den Stift für die Bewegung zum Nullpunkt
+            self.mservo.raise_pen()
+            self.home_pos()
+            self.mservo.stop()
+            self.disable()
+
+            queue = cache.get('cmd_list_queue')
+            queue.pop(0)
+            cache.set('cmd_list_queue', queue)
