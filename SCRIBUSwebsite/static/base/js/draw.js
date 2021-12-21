@@ -325,7 +325,7 @@ const sbmtDrawing = () => {
     // Ermittelt gewählte Speicheroption
     for (let i of save_options) {
         if (i.checked) {
-            let save = i.value;
+            save = i.value;
         }
     }
     
@@ -334,7 +334,7 @@ const sbmtDrawing = () => {
         // ...und kein Warntext vorhanden ist:
         if (designname_warning.innerHTML == "") {
             // Übernimmt den Namen aus dem Inputfeld
-            let name = designname_input.value;
+            name = designname_input.value;
         // ...und ein Warntext vorhanden ist:
         } else {
             // Definiert den Submit als inkorrekt
@@ -343,11 +343,9 @@ const sbmtDrawing = () => {
     // Wenn nicht gespeichert werden soll:
     } else {
         // Definiert den Namen als null
-        let name = null;
+        name = null;
     }
-    
-    console.log(save, name, global.elements);
-    
+
     // Wenn der Submit korrekt ist:
     if (submitValid) {
         // Sendet Name, elements_list und Speicheroption an den Server
