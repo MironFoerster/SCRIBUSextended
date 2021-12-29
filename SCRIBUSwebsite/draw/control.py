@@ -217,7 +217,7 @@ class Robot:
             self.home_pos()
             self.mservo.stop()
             self.disable()
-
+            time.sleep(30)
             queue = cache.get('cmd_list_queue')
             queue.pop(0)
             cache.set('cmd_list_queue', queue)
