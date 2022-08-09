@@ -33,14 +33,14 @@ def submit(request):
 
     # converting elements to SCode
     cmd_list = cmdList.fromElementsList(submitData['elements']['elements'])
-    queue = cache.get('cmd_list_queue')
+    queue = cache.get('queue')
     queue.append(cmd_list)
-    cache.set('cmd_list_queue', queue)
+    cache.set('queue', queue)
 
     if len(queue) == 1:
         # instanciate the robot
         scribus = control.Robot()
-        t = threading.Thread(target=scribus.draw_cmd_list_queue)
+        t = threading.Thread(target=scribus.draw_queue)
         # draw the cmd_list
         t.start()
     
