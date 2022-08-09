@@ -316,6 +316,42 @@ class Robot:
         start = self.pos
         x = start[0] - ctrl[0]
         y = start[1] - ctrl[1]
+
+        if x * (end[0] - ctrl[0]) > 0:
+            t = start[0] - 2 * ctrl[0] + end[0]
+            t = (start[0]-ctrl[0]) / t
+            r = (1-t) * ((1-t) * start[1]+2.0 * t * ctrl[1])+t * t * end[1]
+            t = (start[0] * end[0]-ctrl[0] * ctrl[0]) * t / (start[0]-ctrl[0])
+            x = math.floor(t+0.5)
+            y = math.floor(r+0.5)
+            r = (ctrl[1]-start[1]) * (t-start[0]) / (ctrl[0]-start[0])+start[1]
+            self.bezier_to([x, math.floor(r+0.5)], [x, y])
+            r = (ctrl[1]-end[1]) * (t-end[0]) / (ctrl[0]-end[0])+end[1]
+            ctrl[0] = x
+            ctrl[1] = math.floor(r+0.5)
+            self.bezier_to(ctrl, end)
+
+        elif y * (end[1] - ctrl[1]) > 0:
+            t = start[1] - 2 * ctrl[1] + end[1]
+            t = (start[1]-ctrl[1]) / t
+            r = (1-t) * ((1-t) * start[0]+2.0 * t * ctrl[0])+t * t * end[0]
+            t = (start[1] * end[1]-ctrl[1] * ctrl[1]) * t / (start[1]-ctrl[1])
+            x = math.floor(r+0.5)
+            y = math.floor(t+0.5)
+            r = (ctrl[0]-start[0]) * (t-start[1]) / (ctrl[1]-start[1])+start[0]
+            self.bezier_to([math.floor(r+0.5), y], [x, y])
+            r = (ctrl[0]-end[0]) * (t-end[1]) / (ctrl[1]-end[1])+end[0]
+            ctrl[0] = math.floor(r+0.5)
+            ctrl[1] = y
+            self.bezier_to(ctrl, end)
+
+        else:
+            self.bezier_seg(ctrl, end)
+
+    def bezier_to_orig(self, ctrl, end):
+        start = self.pos
+        x = start[0] - ctrl[0]
+        y = start[1] - ctrl[1]
         t = start[0] - 2 * ctrl[0] + end[0]
         if x * (end[0]-ctrl[0]) > 0:
             if y * (end[1]-ctrl[1]) > 0:
