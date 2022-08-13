@@ -440,11 +440,11 @@ class Robot:
                             self.linear_to(point)
                     elif sm == 1:  # vollständige Abrundung
                         if partpath[0] == partpath[-1]:
-                            self.linear_to(self.middle(self.pos, partpath[1]))
+                            self.linear_to(self.middle(partpath[0], partpath[1]))
                             self.mservo.lower_pen()
                         else:
                             self.mservo.lower_pen()
-                            self.linear_to(self.middle(self.pos, partpath[1]))
+                            self.linear_to(self.middle(partpath[0], partpath[1]))
 
                         for ctrl_point, next_point in zip(partpath[1:-1], partpath[2:]):
                             self.bezier_to(ctrl_point, self.middle(ctrl_point, next_point))
@@ -455,11 +455,11 @@ class Robot:
                             self.linear_to(partpath[-1])
                     else:  # teilweise Abrundung
                         if partpath[0] == partpath[-1]:
-                            self.linear_to(self.percent_between(0.5 + (1 - sm) / 2, self.pos, partpath[1]))
+                            self.linear_to(self.percent_between(0.5 + (1 - sm) / 2, partpath[0], partpath[1]))
                             self.mservo.lower_pen()
                         else:
                             self.mservo.lower_pen()
-                            self.linear_to(self.percent_between(0.5 + (1 - sm) / 2, self.pos, partpath[1]))
+                            self.linear_to(self.percent_between(0.5 + (1 - sm) / 2, partpath[0], partpath[1]))
 
                         for ctrl_point, next_point in zip(partpath[1:-1], partpath[2:]):
                             self.bezier_to(ctrl_point, self.percent_between(sm/2, ctrl_point, next_point))
