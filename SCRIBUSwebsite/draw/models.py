@@ -1,5 +1,6 @@
 from django.db import models
 
+
 # Create your models here.
 class Shape(models.Model):
     name = models.CharField(max_length=20)
@@ -7,3 +8,7 @@ class Shape(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class Scribing(models.Model):
+    elements = models.JSONField()
