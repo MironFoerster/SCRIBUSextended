@@ -34,15 +34,12 @@ class Robot:
         # Legt Microstepping fest
         self.steps_per_fstep = 32
         # Initialisiert die State-Variable des Roboters
-        self.pen = -1
         self.pos = [-1, -1]
 
     def home(self):  # Dient zum homing (Bringt Roboter zum Punkt (0|0) )
         time.sleep(1)
-        if self.pen != 1:
-            # Hebt den Stift für die Bewegung zum Nullpunkt und aktualisiert State-Variable
-            self.mservo.raise_pen()
-            self.pen = 1
+        # Hebt den Stift für die Bewegung zum Nullpunkt und aktualisiert State-Variable
+        self.mservo.raise_pen()
         # Errechnet die Periodenlänge/Dauer eines Schritts
         stepdur = 1.0/self.fsteps_per_sec/self.steps_per_fstep
         phasedur = stepdur/2
@@ -415,7 +412,7 @@ class Robot:
                 scl = element['scale']
                 rot = element['rotation']
                 org = element['origin']
-                sm = element['smoothness']
+                sm = element['smooth']
                 path = []
 
                 # transformieren des pfads zu absoluten koordinaten
@@ -432,27 +429,47 @@ class Robot:
                 # ausführen der Zeichnung
                 for partpath in path:
                     # bewegung zum beginn des partpaths
-                    self.linear_to(partpath.pop(0))
-                    self.mservo.lower_pen()
-                    self.pen = 0
+                    self.mservo.raise_pen()
+                    self.linear_to(partpath[0])
+
+                    if len(partpath) == 1:
+                        continue
 
                     if sm == 0:  # keine Abrundung
-                        for point in partpath:
+                        for point in partpath[1:]:
                             self.linear_to(point)
                     elif sm == 1:  # vollständige Abrundung
-                        self.linear_to(self.middle(self.pos, partpath[0]))
-                        for ctrl_point, next_point in zip(partpath[:-1], partpath[1:]):
+                        if partpath[0] == partpath[-1]:
+                            self.linear_to(self.middle(self.pos, partpath[1]))
+                            self.mservo.lower_pen()
+                        else:
+                            self.mservo.lower_pen()
+                            self.linear_to(self.middle(self.pos, partpath[1]))
+
+                        for ctrl_point, next_point in zip(partpath[1:-1], partpath[2:]):
                             self.bezier_to(ctrl_point, self.middle(ctrl_point, next_point))
-                        self.linear_to(partpath[-1])
+
+                        if partpath[0] == partpath[-1]:
+                            self.bezier_to(partpath[0], self.middle(partpath[0], partpath[1]))
+                        else:
+                            self.linear_to(partpath[-1])
                     else:  # teilweise Abrundung
-                        self.linear_to(self.percent_between(0.5 + (1-sm)/2, self.pos, partpath[0]))
-                        for ctrl_point, next_point in zip(partpath[:-1], partpath[1:]):
+                        if partpath[0] == partpath[-1]:
+                            self.linear_to(self.percent_between(0.5 + (1 - sm) / 2, self.pos, partpath[1]))
+                            self.mservo.lower_pen()
+                        else:
+                            self.mservo.lower_pen()
+                            self.linear_to(self.percent_between(0.5 + (1 - sm) / 2, self.pos, partpath[1]))
+
+                        for ctrl_point, next_point in zip(partpath[1:-1], partpath[2:]):
                             self.bezier_to(ctrl_point, self.percent_between(sm/2, ctrl_point, next_point))
                             self.linear_to(self.percent_between((1-sm)/(1-sm/2), self.pos, next_point))
-                        self.linear_to(partpath[-1])
 
-                    self.mservo.raise_pen()
-                    self.pen = 1
+                        if partpath[0] == partpath[-1]:
+                            self.bezier_to(partpath[0], self.percent_between(sm/2, partpath[0], partpath[1]))
+                            self.linear_to(self.percent_between((1 - sm) / (1 - sm / 2), self.pos, partpath[1]))
+                        else:
+                            self.linear_to(partpath[-1])
 
             self.home()
             self.mservo.stop()

@@ -742,9 +742,14 @@ const getPointOnEl = (pointOnCvs, element) => {
     return {'x': xtrs, 'y': ytrs};
 }
 
+const middle = (a, b) => {
+    return [int((a[0]+b[0])/2), int((a[1]+b[1])/2)];
+}
+const percent_between = (p, a, b) => {
+    return [a[0]+int((a[0]-b[0])*p), a[1]+int((a[1]-b[1])*p)];
+}
 //Function that redraws the canvas
 const redraw_canvas = () => {
-
   //clear draw_canvas
   ctx.clearRect(0, 0, cvs_elem.width, cvs_elem.height);
   //redraw
@@ -770,9 +775,52 @@ const redraw_canvas = () => {
 
     // draw the path
     for (let partpath of el.path) {
-      ctx.moveTo(partpath[0][0], partpath[0][1]);
-      for (let point of partpath) {
-        ctx.lineTo(point[0], point[1]);
+        ctx.moveTo(partpath[0][0], partpath[0][1]);
+
+        if (el.smooth == 0) {  // keine Abrundung
+            for (let point of partpath.slice(1, partpath.length)) {
+                ctx.lineTo(point[0], point[1]);
+            }
+        } else if (el.smooth == 1) {  // vollständige Abrundung
+            if (partpath[0] == partpath[-1]) {
+                ctx.moveTo(...self.middle(self.pos, partpath[1]));
+            } else {
+                ctx.lineTo(...self.middle(self.pos, partpath[1]));
+            }
+
+            for (let i=1; i<partpath.length-1; i++) {
+                let ctrl_point = partpath[i];
+                let next_point = partpath[i+1];
+
+                ctx.quadraticCurveTo(...ctrl_point, ...middle(ctrl_point, next_point));
+            }
+            if (partpath[0] == partpath[-1]) {
+                ctx.quadraticCurveTo(...partpath[0], ...self.middle(partpath[0], partpath[1]));
+            } else {
+                ctx.lineTo(...partpath[-1]);
+            }
+        } else {  // teilweise Abrundung
+            if (partpath[0] == partpath[-1]) {
+                ctx.moveTo(...percent_between(0.5 + (1 - el.smooth) / 2, self.pos, partpath[1]));
+            } else {
+                ctx.lineTo(...percent_between(0.5 + (1 - el.smooth) / 2, self.pos, partpath[1]));
+            }
+
+            for (let i=1; i<partpath.length-1; i++) {
+                let ctrl_point = partpath[i];
+                let next_point = partpath[i+1];
+
+                ctx.quadraticCurveTo(...ctrl_point, ...percent_between(el.smooth/2, ctrl_point, next_point));
+                ctx.lineTo(...Spercent_between((1-el.smooth)/(1-el.smooth/2), self.pos, next_point));
+            }
+            ctx.lineTo(...partpath[-1]);
+            if (partpath[0] == partpath[-1]) {
+                ctx.quadraticCurveTo(...partpath[0], ...self.percent_between(sm/2, partpath[0], partpath[1]));
+                ctx.lineTo(...self.percent_between((1 - sm) / (1 - sm / 2), self.pos, partpath[1]));
+            } else {
+                ctx.lineTo(...partpath[-1])
+            }
+        }
       }
     }
     ctx.stroke();
