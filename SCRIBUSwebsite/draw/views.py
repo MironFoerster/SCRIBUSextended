@@ -1,14 +1,15 @@
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect
 from django.http import JsonResponse
-from .models import Shape
+from .models import Shape, Scribing
 from gallery.models import Design
 import json
 import threading
 from django.core.cache import cache
 from . import cmdList
 from . import control
-
+import scribemodel as scribe
+import os
 
 @login_required(login_url='/home/login/')
 def index(request):
@@ -50,3 +51,30 @@ def submit(request):
 def shapes(request):
     print('shapes view')
     return JsonResponse(Shape.objects.get(name=json.loads(request.body)['shapeName']).path)
+
+
+base_path = "C:/Users/miron/Git/scribeAI"
+
+run_name = "miron"
+
+model = scribe.Model()
+model.compile(optimizer='adam',
+              loss=[scribe.Loss(), None, None],
+              metrics=[['accuracy'], [None, None]],
+              run_eagerly=True)
+model.evaluate(test_set.batch(batch_size=1).take(1), verbose=2)
+model.load_weights(os.path.join(base_path, "checkpoints", run_name, "weights.hdf5"))
+model.evaluate(test_set.batch(batch_size=1).take(1), verbose=2)
+
+
+def scribe(request):
+    print('scribe view')
+    words = json.loads(request.body)['words']
+    elements = []
+    for word in words:
+        element != model.predict(word)
+        elements.append(element)
+
+    scribing = Scribing(elements=elements)
+    scribing.save()
+    return JsonResponse(scribing.elements)
