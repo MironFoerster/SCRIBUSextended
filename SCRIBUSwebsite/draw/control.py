@@ -35,6 +35,8 @@ class Robot:
         self.steps_per_fstep = 32
         # Initialisiert die State-Variable des Roboters
         self.pos = [-1, -1]
+        self.truepos = None
+        self.execute = True
 
     def home(self):  # Dient zum homing (Bringt Roboter zum Punkt (0|0) )
         time.sleep(1)
@@ -97,79 +99,8 @@ class Robot:
         gpio.output(self.my.stp_pin, 0)
         # Aktualisiert die State-Variable
         self.pos = [0, 0]
+        self.truepos = [0, 0]
         time.sleep(1)
-
-    def linear_move(self, cmd):  # Lässt den Roboter zu einem bestimmten Punkt fahren
-        # Berechnet Strecke für X-Motor Y-Motor und Strokestrecke
-        distance = {'x': cmd['x'] - self.pos[0], 'y': cmd['y'] - self.pos[1]}
-        distance.update({'stroke': math.sqrt(math.pow(distance['x'], 2)+math.pow(distance['y'], 2))})
-
-        direction = {}
-        # Berechnet Richtungen für beide Motoren
-        if distance['x'] >= 0:
-            direction['x'] = 0
-        else:
-            direction['x'] = 1
-
-        if distance['y'] >= 0:
-            direction['y'] = 1
-        else:
-            direction['y'] = 0
-            
-        # Setzt die Direction-Pins entsprechend der Berechnungen
-        gpio.output(self.mx.dir_pin, direction['x'])
-        gpio.output(self.my.dir_pin, direction['y'])
-            
-        # Entfernt Vorzeichen vor den Motor- Strecken
-        distance.update({'x': abs(distance['x']), 'y': abs(distance['y'])})
-        
-        # Berechnet Dauer des Strokes mithilge von Strokestrecke und Geschwindigkeit
-        stroke_duration = distance['stroke']/float(self.fsteps_per_sec)
-        
-        # Berechnet Anzahl derzurückzulegenden  Schritte für den jeweiligen Motor
-        x_stepcount = distance['x']*self.steps_per_fstep
-        y_stepcount = distance['y']*self.steps_per_fstep
-        
-        # Prüft, ob der jeweilige Motor überhaupt Schritte zurücklegen muss
-        # Berechnet Streckungsfaktor oder setzt ihn auf 0, um den Motor zu deaktivieren
-        if x_stepcount > 0:
-            x_stepdur = stroke_duration/x_stepcount
-            x_sin_factor = 2*math.pi/x_stepdur
-        else:
-            x_sin_factor = 0
-            
-        if y_stepcount > 0:
-            y_stepdur = stroke_duration/y_stepcount
-            y_sin_factor = 2*math.pi/y_stepdur
-        else:
-            y_sin_factor = 0
-
-        # Führt das selbe aus, wie home(), nur mit zwei unterschiedlich gestreckten
-        # Sinusfunktionen, jede für einen Motor, und ohne Schalterprüfung
-        start_time = time.time()
-        x_pin_state = 0
-        y_pin_state = 0
-        rel_time = time.time() - start_time
-        
-        # Wiederholt, solange die erwartete Strokedauer nicht erreicht ist
-        while rel_time < stroke_duration:
-                               
-            x_calc_pin_state = int(math.sin(rel_time*x_sin_factor) > 0)
-            y_calc_pin_state = int(math.sin(rel_time*y_sin_factor) > 0)
-            
-            if x_pin_state != x_calc_pin_state:
-                gpio.output(self.mx.stp_pin, x_calc_pin_state)
-                x_pin_state = x_calc_pin_state
-
-            if y_pin_state != y_calc_pin_state:
-                gpio.output(self.my.stp_pin, y_calc_pin_state)
-                y_pin_state = y_calc_pin_state
-                
-            rel_time = time.time()-start_time
-
-        # Aktualisiert die State-Variable mit dem neuen Punkt
-        self.pos[0] = cmd['x']
-        self.pos[1] = cmd['y']
 
     # bresenham implementations from https://zingl.github.io/Bresenham.pdf
 
@@ -177,7 +108,7 @@ class Robot:
         spf = 32  # microsteps per fullstep
 
         cmpos = [int(i * spf) for i in copy.deepcopy(self.pos)]  # current micro position
-        mend = [i * spf for i in copy.deepcopy(end)]  # micro endpoint
+        mend = [int(i * spf) for i in copy.deepcopy(end)]  # micro endpoint
 
         # Setzt beide Direction-Pins auf richtige Richtung
         gpio.output(self.mx.dir_pin, 0 if end[0] > cmpos[0] else 1)
@@ -188,9 +119,9 @@ class Robot:
         phasedur = stepdur / 2
 
         dx = abs(mend[0]-cmpos[0])
-        sx = 1 if end[0] > cmpos[0] else -1
+        sx = 1 if end[0] > cmpos[0] else -1 if end[0] < cmpos[0] else 0
         dy = -abs(mend[1]-cmpos[1])
-        sy = 1 if end[1] > cmpos[1] else -1
+        sy = 1 if end[1] > cmpos[1] else -1 if end[1] < cmpos[1] else 0
         err = dx + dy
 
         while True:
@@ -199,27 +130,81 @@ class Robot:
                 if cmpos[0] == mend[0]:
                     break
                 err += dy
-                cmpos[0] += sx
-
-                # führt einen x-Schritt aus
-                gpio.output(self.mx.stp_pin, 1)
-                time.sleep(phasedur)
-                gpio.output(self.mx.stp_pin, 0)
+                # cmpos[0] += sx
+                x_step = True
             else:
-                time.sleep(phasedur)
+                x_step = False
+                """if onto_grid:
+                    if self.truepos is None:  # no reentering of the grid, normal step
+                        # führt einen x-Schritt aus
+                        gpio.output(self.mx.stp_pin, 1)
+                        time.sleep(phasedur)
+                        gpio.output(self.mx.stp_pin, 0)
+                    else:  # grid is reentered, make a linear move from the truepos to the point of reentry
+                        self.pos = copy.deepcopy(self.truepos)
+                        self.truepos = None
+                        self.linear_to([i / spf for i in cmpos])
+                        self.mservo.lower_pen()
+                        # current linear_to is simply continued after that
+                elif self.truepos is None:
+                    self.mservo.raise_pen()
+                    self.truepos = [i/spf for i in copy.deepcopy(cmpos)]  # true position
+
+            else:
+                if onto_grid:
+                    time.sleep(phasedur)"""
 
             if e2 <= dx:
                 if cmpos[1] == mend[1]:
                     break
                 err += dx
-                cmpos[1] += sy
-
-                # führt einen y-Schritt aus
-                gpio.output(self.my.stp_pin, 1)
-                time.sleep(phasedur)
-                gpio.output(self.my.stp_pin, 0)
+                # cmpos[1] += sy
+                y_step = True
             else:
-                time.sleep(phasedur)
+                y_step = False
+                """if onto_grid:
+                    # führt einen y-Schritt aus
+                    gpio.output(self.my.stp_pin, 1)
+                    time.sleep(phasedur)
+                    gpio.output(self.my.stp_pin, 0)
+                else:
+
+            else:
+                if onto_grid:
+                    time.sleep(phasedur)"""
+                
+            pmpos = copy.deepcopy(cmpos)  # previous micro position
+            cmpos = [cmpos[0] + sx * int(x_step), cmpos[1] + sy * int(y_step)]  # update current micro position
+            
+            maxmc = 1000 * spf  # maximum micro coordinates
+            # WHAT ABOUT PATHS THAT START OUTSIDE
+            # following expressions are True if the respective position is inside the drawing area
+            if 0 <= pmpos[0] <= maxmc and 0 <= pmpos[1] <= maxmc:
+                if 0 <= cmpos[0] <= maxmc and 0 <= cmpos[1] <= maxmc:  # current step STAYS INSIDE the drawing area
+                    if x_step:
+                        gpio.output(self.mx.stp_pin, 1)
+                        time.sleep(phasedur)
+                        gpio.output(self.mx.stp_pin, 0)
+                    else:
+                        time.sleep(phasedur)
+
+                    if y_step:
+                        gpio.output(self.my.stp_pin, 1)
+                        time.sleep(phasedur)
+                        gpio.output(self.my.stp_pin, 0)
+                    else:
+                        time.sleep(phasedur)
+                else:  # current step EXITS the drawing area; save true position
+                    self.truepos = copy.deepcopy(pmpos)
+            else:
+                if 0 <= cmpos[0] <= maxmc and 0 <= cmpos[1] <= maxmc:  # current step ENTERS the drawing area; make a linear move from the truepos to the entry point
+                    self.pos = copy.deepcopy(self.truepos)
+                    self.truepos = None
+                    self.linear_to([i / spf for i in cmpos])
+                    self.mservo.lower_pen()
+                    # current linear_to is simply continued after that
+                else:  # current step STAYS OUTSIDE the drawing area
+                    pass
 
         self.pos = end
 
