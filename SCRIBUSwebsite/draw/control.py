@@ -130,57 +130,27 @@ class Robot:
                 if cmpos[0] == mend[0]:
                     break
                 err += dy
-                # cmpos[0] += sx
                 x_step = True
             else:
                 x_step = False
-                """if onto_grid:
-                    if self.truepos is None:  # no reentering of the grid, normal step
-                        # führt einen x-Schritt aus
-                        gpio.output(self.mx.stp_pin, 1)
-                        time.sleep(phasedur)
-                        gpio.output(self.mx.stp_pin, 0)
-                    else:  # grid is reentered, make a linear move from the truepos to the point of reentry
-                        self.pos = copy.deepcopy(self.truepos)
-                        self.truepos = None
-                        self.linear_to([i / spf for i in cmpos])
-                        self.mservo.lower_pen()
-                        # current linear_to is simply continued after that
-                elif self.truepos is None:
-                    self.mservo.raise_pen()
-                    self.truepos = [i/spf for i in copy.deepcopy(cmpos)]  # true position
-
-            else:
-                if onto_grid:
-                    time.sleep(phasedur)"""
 
             if e2 <= dx:
                 if cmpos[1] == mend[1]:
                     break
                 err += dx
-                # cmpos[1] += sy
                 y_step = True
             else:
                 y_step = False
-                """if onto_grid:
-                    # führt einen y-Schritt aus
-                    gpio.output(self.my.stp_pin, 1)
-                    time.sleep(phasedur)
-                    gpio.output(self.my.stp_pin, 0)
-                else:
-
-            else:
-                if onto_grid:
-                    time.sleep(phasedur)"""
                 
             pmpos = copy.deepcopy(cmpos)  # previous micro position
             cmpos = [cmpos[0] + sx * int(x_step), cmpos[1] + sy * int(y_step)]  # update current micro position
             
             maxmc = 1000 * spf  # maximum micro coordinates
-            # WHAT ABOUT PATHS THAT START OUTSIDE
+
             # following expressions are True if the respective position is inside the drawing area
             if 0 <= pmpos[0] <= maxmc and 0 <= pmpos[1] <= maxmc:
                 if 0 <= cmpos[0] <= maxmc and 0 <= cmpos[1] <= maxmc:  # current step STAYS INSIDE the drawing area
+                    # execute a step cycle
                     if x_step:
                         gpio.output(self.mx.stp_pin, 1)
                         time.sleep(phasedur)
@@ -194,15 +164,16 @@ class Robot:
                         gpio.output(self.my.stp_pin, 0)
                     else:
                         time.sleep(phasedur)
-                else:  # current step EXITS the drawing area; save true position
+                else:  # current step EXITS the drawing area
+                    # save true position
                     self.truepos = copy.deepcopy(pmpos)
             else:
-                if 0 <= cmpos[0] <= maxmc and 0 <= cmpos[1] <= maxmc:  # current step ENTERS the drawing area; make a linear move from the truepos to the entry point
+                if 0 <= cmpos[0] <= maxmc and 0 <= cmpos[1] <= maxmc:  # current step ENTERS the drawing area
+                    # make a linear move from the truepos to the entry point
                     self.pos = copy.deepcopy(self.truepos)
                     self.truepos = None
-                    self.linear_to([i / spf for i in cmpos])
+                    self.linear_to([i / spf for i in cmpos])  # current linear_to is simply continued after that
                     self.mservo.lower_pen()
-                    # current linear_to is simply continued after that
                 else:  # current step STAYS OUTSIDE the drawing area
                     pass
 
@@ -240,10 +211,10 @@ class Robot:
 
         if cur != 0:
             xx += sx
-            sx = 1 if cmpos[0] < mend[0] else -1
+            sx = 1 if cmpos[0] < mend[0] else -1 if cmpos[0] > mend[0] else 0
             xx *= sx
             yy += sy
-            sy = 1 if cmpos[1] < mend[1] else -1
+            sy = 1 if cmpos[1] < mend[1] else -1 if cmpos[1] > mend[1] else 0
             yy *= sy
             xy = 2 * xx * yy
             xx *= xx
@@ -263,34 +234,60 @@ class Robot:
                     self.pos = end
                     return
                 if 2 * err > dy:
-                    cmpos[0] += sx
+                    x_step = True
                     dx -= xy
                     dy += yy
                     err += dy
-
-                    # führt einen x-Schritt aus
-                    gpio.output(self.my.stp_pin, 1)
-                    time.sleep(phasedur)
-                    gpio.output(self.my.stp_pin, 0)
                 else:
-                    time.sleep(phasedur)
+                    x_step = False
 
                 mctrl[1] = 2 * err < dx
                 if mctrl[1]:
-                    cmpos[1] += sy
+                    y_step = True
                     dy -= xy
                     dx += xx
                     err += dx
-
-                    # führt einen y-Schritt aus
-                    gpio.output(self.my.stp_pin, 1)
-                    time.sleep(phasedur)
-                    gpio.output(self.my.stp_pin, 0)
                 else:
-                    time.sleep(phasedur)
+                    y_step = False
 
                 if dy < 0 and dx > 0:
                     break
+
+                pmpos = copy.deepcopy(cmpos)  # previous micro position
+                cmpos = [cmpos[0] + sx * int(x_step), cmpos[1] + sy * int(y_step)]  # update current micro position
+
+                maxmc = 1000 * spf  # maximum micro coordinates
+
+                # following expressions are True if the respective position is inside the drawing area
+                if 0 <= pmpos[0] <= maxmc and 0 <= pmpos[1] <= maxmc:
+                    if 0 <= cmpos[0] <= maxmc and 0 <= cmpos[1] <= maxmc:  # current step STAYS INSIDE the drawing area
+                        # execute a step cycle
+                        if x_step:
+                            gpio.output(self.mx.stp_pin, 1)
+                            time.sleep(phasedur)
+                            gpio.output(self.mx.stp_pin, 0)
+                        else:
+                            time.sleep(phasedur)
+
+                        if y_step:
+                            gpio.output(self.my.stp_pin, 1)
+                            time.sleep(phasedur)
+                            gpio.output(self.my.stp_pin, 0)
+                        else:
+                            time.sleep(phasedur)
+                    else:  # current step EXITS the drawing area
+                        # save true position
+                        self.truepos = copy.deepcopy(pmpos)
+                else:
+                    if 0 <= cmpos[0] <= maxmc and 0 <= cmpos[1] <= maxmc:  # current step ENTERS the drawing area
+                        # make a linear move from the truepos to the entry point
+                        self.pos = copy.deepcopy(self.truepos)
+                        self.truepos = None
+                        self.linear_to([i / spf for i in cmpos])  # current bezier_seg is simply continued after that
+                        self.mservo.lower_pen()
+                    else:  # current step STAYS OUTSIDE the drawing area
+                        pass
+
         self.pos = [cmpos[0]/spf, cmpos[1]/spf]
         self.linear_to(end)
 
