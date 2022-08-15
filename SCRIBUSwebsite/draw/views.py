@@ -70,11 +70,11 @@ model.evaluate(test_set.batch(batch_size=1).take(1), verbose=2)
 def scribe(request):
     print('scribe view')
     words = json.loads(request.body)['words']
-    elements = []
+    preds = []
     for word in words:
-        element != model.predict(word)
-        elements.append(element)
+        pred = model.predict(word)
+        preds.append(pred)
 
-    scribing = Scribing(elements=elements)
+    scribing = Scribing(hws=pred, words=words)
     scribing.save()
-    return JsonResponse(scribing.elements)
+    return JsonResponse(scribing.hws)

@@ -11,4 +11,5 @@ class Shape(models.Model):
 
 
 class Scribing(models.Model):
-    elements = models.JSONField()
+    hws = models.JSONField()
+    words = models.JSONField()
