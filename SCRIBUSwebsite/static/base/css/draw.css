@@ -42,12 +42,54 @@ body {
     grid-row: 1;
     grid-column: 1;
     display: flex;
+    flex-direction: column;
+    align-items: center;
 }
+
+#scribe-generate-sub {
+    justify-content: flex-start;
+}
+
+#scribe-adjust-sub {
+    justify-content: space-around;
+}
+
 textarea {
     resize: none;
     width: 90%;
     height: 50%
     margin: 5%;
+}
+
+#align-ctrl{
+    display: flex;
+    justify-content: space-around;
+    align-items: stretch;
+    width: 20em;
+    height: 2em;
+    border-radius: 4px;
+    background-color: blue;
+    overflow: hidden;
+
+}
+#align-ctrl input{
+    display: none;
+}
+
+#align-ctrl label{
+    text-align: center;
+    color: rgb(195,104,57);
+    margin: 0px;
+    background-color: blue;
+    flex-basis: 0;
+    flex-grow: 1;
+    padding-top: 5px;
+    padding-bottom: 5px;
+}
+
+#align-ctrl input:checked + label{
+    background-color: green;
+    font-weight: bold;
 }
 
 #galery-overlay, #shapes-overlay {
@@ -223,6 +265,22 @@ textarea {
     align-items: center;
 
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
