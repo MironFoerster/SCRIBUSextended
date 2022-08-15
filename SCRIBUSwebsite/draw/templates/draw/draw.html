@@ -11,18 +11,36 @@
                 <img class="icon" src="{% static 'imgs/scribe.svg' %}">
                 <img class="icon-focus" src="{% static 'imgs/scribe_focus.svg' %}">
             </label>
+            <div id="scribe-overlay" class="overlay">
+                <div id="scribe-generate-sub">
+                    <textarea id="scribe-text-input" placeholder="Here goes the text you want SCRIBUS to write!"></textarea>
+                    <div id="generate-btn" onclick="generateHandwriting(event)">GENERATE</div>
+                </div>
+                <div id="scribe-adjust-sub">
+
+                </div>
+            </div>
 
             <input type="radio" name="draw_ctrl" id="shapes" onclick="manageDrawCtrl(event)" value="shapes">
             <label for="shapes" class="draw-ctrl-btn">
                 <img class="icon" src="{% static 'imgs/shapes.svg' %}">
                 <img class="icon-focus" src="{% static 'imgs/shapes_focus.svg' %}">
             </label>
+            <div id="shapes-overlay" class="overlay">
+                <div class="shadowbox"></div>
+                <div class="scrollbox">
+
+                </div>
+            </div>
 
             <input type="radio" name="draw_ctrl" id="galery" onclick="manageDrawCtrl(event)" value="galery">
             <label for="galery" class="draw-ctrl-btn">
                 <img class="icon" src="{% static 'imgs/galery.svg' %}">
                 <img class="icon-focus" src="{% static 'imgs/galery_focus.svg' %}">
             </label>
+            <div id="galery-overlay" class="overlay">
+
+            </div>
         </div>
 
         <canvas id="main-cvs" width=1000 height=1000></canvas>
