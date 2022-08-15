@@ -4,7 +4,7 @@ body {
     font-family: sans-serif;
 }
 
-#main_cvs {
+#main-cvs {
     background-color: #ffffee;
     width: 96vh;
     height: 96vh;
@@ -12,77 +12,141 @@ body {
     align-self: center;
 }
 
-#draw_sub {
+.grid-container {
+    display: grid;
+}
+
+.subpage {
+    grid-column: 1;
+    grid-row: 1;
+}
+
+#draw-sub {
     display: flex;
     flex-direction: row;
     justify-content: space-evenly;
     align-items: stretch;
 }
 
-.draw_ctrl_pane input{
+.draw-ctrl-pane input{
     display: none;
 }
 
-.draw_ctrl_pane {
+.draw-ctrl-pane {
     display: flex;
     flex-direction: column;
     justify-content: space-evenly;
 }
 
-#left_ctrl_pane {
+#left-ctrl-pane {
     align-items: flex-start;
 }
 
-#right_ctrl_pane {
+#right-ctrl-pane {
     align-items: flex-end;
 }
 
-.draw_ctrl_pane .draw_ctrl_btn{
+.draw-ctrl-btn{
     margin: 0px;
     background-color: white;
     flex-basis: 0;
     flex-grow: 2;
-    padding-top: 5px;
-    padding-bottom: 5px;
     display: grid;
 }
 
-.draw_ctrl_btn img,
-.draw_okcancel_btn img {
+.draw-ctrl-btn img,
+.draw-okcancel-btn img {
     grid-column: 1;
     grid-row: 1;
     margin: 10px;
 }
 
-.draw_ctrl_pane input:checked + .draw_ctrl_btn,
-.draw_ctrl_pane .draw_okcancel_btn:not([data-state="default"]) {
+.draw-ctrl-pane input:checked + .draw-ctrl-btn,
+.draw-ctrl-pane .draw-okcancel-btn:not([data-state="default"]) {
     width: 200%;
 }
-.draw_ctrl_pane input:not(:checked) + .draw_ctrl_btn,
-.draw_ctrl_pane .draw_okcancel_btn[data-state="default"] {
+.draw-ctrl-pane input:not(:checked) + .draw-ctrl-btn,
+.draw-ctrl-pane .draw-okcancel-btn[data-state="default"] {
     width: 100%;
 }
 
-.draw_ctrl_pane input:checked + .draw_ctrl_btn .icon,
-.draw_ctrl_pane .draw_okcancel_btn:not([data-state="default"]) .icon {
-    opacity: 0;
-}
-.draw_ctrl_pane input:checked + .draw_ctrl_btn .icon_focus,
-.draw_ctrl_pane .draw_okcancel_btn:not([data-state="default"]) .icon_focus {
+.grid-container[data-state="finish_sub"] div[id="finish_sub"],
+.grid-container[data-state="draw_sub"] div[id="draw_sub"],
+.draw-ctrl-pane input:checked + .draw-ctrl-btn .icon-focus,
+.draw-ctrl-pane .draw-okcancel-btn:not([data-state="default"]) .icon-focus,
+.draw-ctrl-pane input:not(:checked) + .draw-ctrl-btn .icon,
+.draw-ctrl-pane .draw-okcancel-btn[data-state="default"] .icon {
     opacity: 1;
 }
-.draw_ctrl_pane input:not(:checked) + .draw_ctrl_btn .icon,
-.draw_ctrl_pane .draw_okcancel_btn[data-state="default"] .icon {
-    opacity: 1;
-}
-.draw_ctrl_pane input:not(:checked) + .draw_ctrl_btn .icon_focus,
-.draw_ctrl_pane .draw_okcancel_btn[data-state="default"] .icon_focus {
+
+.grid-container[data-state="draw_sub"] div[id="finish_sub"],
+.grid-container[data-state="finish_sub"] div[id="draw_sub"],
+.draw-ctrl-pane input:checked + .draw-ctrl-btn .icon,
+.draw-ctrl-pane .draw-okcancel-btn:not([data-state="default"]) .icon,
+.draw-ctrl-pane input:not(:checked) + .draw-ctrl-btn .icon-focus,
+.draw-ctrl-pane .draw-okcancel-btn[data-state="default"] .icon-focus {
     opacity: 0;
 }
 
 
 
 
+// finish-sub
+
+#draw-sub {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-evenly;
+    align-items: stretch;
+}
+
+#left-finish-pane, #right-finish-pane {
+    display:flex;
+    flex-direction: column;
+    justify-content: space-evenly;
+    align-items: center;
+}
+
+#finish-cvs {
+    background-color: #ffffee;
+    width: 60vh;
+    height: 60vh;
+    box-shadow: 2px 2px 5px rgb(0,0,0,0.3);
+}
+
+#back-btn {
+    align-self: flex-start;
+    height: 15vh;
+    width: 15vh;
+}
+
+#vl {
+  border-left: 1px solid green;
+  height: 60vh;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  margin-top: -30vh;
+}
+
+#save-btn[data-state="save"],
+#download-btn[data-state="download"],
+#robot-draw-btn[data-state="send"] {
+    background-color: blue;
+}
+#save-btn[data-state="saved"],
+#download-btn[data-state="downloaded"],
+#robot-draw-btn[data-state="sent"] {
+    background-color: green;
+}
+
+#getit-flex {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    align-items: center;
+
+}
 
 
 
