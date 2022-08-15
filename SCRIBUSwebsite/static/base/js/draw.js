@@ -48,6 +48,7 @@ class pathElement {
         this.origin = origin;
         this.rotation = 0;
         this.scale = 1;
+        this.smooth = 0;
 
         this.min = {'x': Infinity, 'y': Infinity}
         this.max = {'x': -Infinity, 'y': -Infinity}

@@ -1,0 +1,68 @@
+{% extends 'base/base.html' %}
+
+{% block beforeloadscript %}{% endblock %}
+
+{% block body %}
+
+<div id="draw_sub" class="subpage">
+    <div id="left_ctrl_pane" class="draw_ctrl_pane">
+        <input type="radio" name="draw_ctrl" id="scribe" onclick="manageDrawCtrl(event)" value="scribe">
+        <label for="scribe" class="draw_ctrl_btn">
+            <img class="icon" src="{% static 'imgs/scribe.svg' %}">
+            <img class="icon_focus" src="{% static 'imgs/scribe_focus.svg' %}">
+        </label>
+
+        <input type="radio" name="draw_ctrl" id="shapes" onclick="manageDrawCtrl(event)" value="shapes">
+        <label for="shapes" class="draw_ctrl_btn">
+            <img class="icon" src="{% static 'imgs/shapes.svg' %}">
+            <img class="icon_focus" src="{% static 'imgs/shapes_focus.svg' %}">
+        </label>
+
+        <input type="radio" name="draw_ctrl" id="galery" onclick="manageDrawCtrl(event)" value="galery">
+        <label for="galery" class="draw_ctrl_btn">
+            <img class="icon" src="{% static 'imgs/galery.svg' %}">
+            <img class="icon_focus" src="{% static 'imgs/galery_focus.svg' %}">
+        </label>
+    </div>
+
+    <canvas id="main_cvs" width=1000 height=1000></canvas>
+
+    <div id="right_ctrl_pane" class="draw_ctrl_pane">
+        <input type="radio" name="draw_ctrl" id="pen" onclick="manageDrawCtrl(event)" value="pen">
+        <label for="pen" class="draw_ctrl_btn">
+            <img class="icon" src="{% static 'imgs/pen.svg' %}">
+            <img class="icon_focus" src="{% static 'imgs/pen_focus.svg' %}">
+        </label>
+
+        <input type="radio" name="draw_ctrl" id="pointer" onclick="manageDrawCtrl(event)" value="pointer" checked>
+        <label for="pointer" class="draw_ctrl_btn">
+            <img class="icon" src="{% static 'imgs/pointer.svg' %}">
+            <img class="icon_focus" src="{% static 'imgs/pointer_focus.svg' %}">
+        </label>
+
+        <div id="cancel" class="draw_okcancel_btn" onclick="manageDrawCtrl(event)" data-state="default">
+            <img class="icon" src="{% static 'imgs/cancel.svg' %}">
+            <img class="icon_focus" src="{% static 'imgs/cancel_focus.svg' %}">
+        </div>
+
+        <div id="ok" class="draw_okcancel_btn" onclick="manageDrawCtrl(event)" data-state="default">
+            <img class="icon" src="{% static 'imgs/ok.svg' %}">
+            <img class="icon_focus" src="{% static 'imgs/ok_focus.svg' %}">
+        </div>
+
+    </div>
+
+</div>
+
+<div id="finish_sub" class="subpage">
+
+
+
+</div>
+
+{% endblock %}
+
+{% block scriptsource %}
+{% load static %}
+{% static 'base/js/draw.js' %}
+{% endblock %}
