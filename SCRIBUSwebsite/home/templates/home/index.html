@@ -2,4 +2,15 @@
 
 {% block main %}
 
+<div id="menu-header">+++SCRIBUS+++</div>
+<div id="menu-flex">
+    <a id="gallery-link" class="menu-link" href="{% url 'gallery:index' %}">
+        <img class="menu-icon" src="{% static 'imgs/gallery_link.svg' %}">
+        <div class="menu-link-text">GALLERY</div>
+    </a>
+    <a id="draw-link" class="menu-link" href="{% url 'draw:index' %}">
+        <img class="menu-icon" src="{% static 'imgs/draw_link.svg' %}">
+        <div class="menu-link-text">DRAW</div>
+    </a>
+</div>
 {% endblock %}
