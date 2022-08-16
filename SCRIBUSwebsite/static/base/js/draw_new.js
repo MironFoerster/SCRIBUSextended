@@ -13,6 +13,9 @@ let global = {
     'prevPosOnCvs': undefined,
     'touchHasNotMoved': undefined,
     'sentCounter': 0,
+    'shapes': [],
+    'designs': [],
+    'words': [],
 }
 
 
@@ -133,8 +136,6 @@ const manageDrawControl = (evt) => {
         case "scribe":
             document.getElementById("scribe-text-input").innerHTML = "";
             document.getElementById("ok").disabled = true;
-            //document.getElementById("left-radio").checked = true;
-            //document.getElementById("ration-range").value = 50;
         case "shapes":
             cards = document.getElementsByClassName("shape-card-cvs");
             for (card of cards) {
@@ -155,82 +156,123 @@ const manageDrawControl = (evt) => {
 }
 
 
+// functions used by draw control
 
+const okGallery = () => {
+    // Bekommt alle aktiven Formen (normalerweise ist das nur eine oder keine)
+    let groupedDesigns = document.querySelectorAll('.design-card-cvs[data-state="grouped"]');
+    let originalDesigns = document.querySelectorAll('.design-card-cvs[data-state="original"]');
 
-// Helperfunctions
-
-const createPopup = (message, buttons, onclicks) => {
-    p = document.createElement("div");
-    p.class = "popup-body";
-    p.onclick = "event.stopPropagation();event.currentTarget.remove();"
-    m = document.createElement("div");
-    m.class = "popup-message";
-    c = document.createElement("div");
-    c.class = "popup-ctrl";
-
-    for (let i; i<buttons.length; i++) {
-        b = document.createElement("button");
-        b.innerHTML = buttons[i];
-        b.onclick = onclicks[i];
-        c.appendChild(b);
+    for (design of groupedDesigns) {
+        let groupedPath = groupElements(global.designs[design.data-name]);
+        global.elements.push(new pathElement(groupedPath));
+    }
+    for (design of originalDesigns) {
+        let designObject = global.designs[design.data-name]
+        for (element of designObject) {
+            global.elements.push(new pathElement(element.path, origin=element.origin));
+        }
     }
 
-    p.appendChild(m);
-    p.appendChild(c);
-    document.body.appendChild(p);
-    return p;
-}
-
-
-const okGalery = () => {
+    // definiert das letzte zugefügte Element als fokussiertes Element
+    global.focusedEl = global.elements[global.elements.length - 1];
 
     // Speichert aktuelle elements_list in der sessionStorage
     sessionStorage.setItem('elements', JSON.stringify(global.elements));
 
+    // Aktualisiert die Zeichenfläche
+    redraw_canvas();
 }
 
-// KI-Handschrift einfügen...
-const okScribe = () => {
-    // Funktion noch nicht implementiert, Platzhalter
-}
-
-const selectShape = (evt) => {
-    // Beim Auswählen einer Form:
-
-    // Bekommt alle aktiven Formen (normalerweise ist das nur eine oder keine)
-    let activeChoices = document.getElementsByClassName("focused-card");
-    // Deaktiviert alle aktiven Formen
-    while (activeChoices[0]) {
-        activeChoices[0].classList.remove("focused-card");
+const toggleDesign = (evt) => {
+    if (evt.currentTarget.data-state == "default") {
+        evt.currentTarget.data-state == "grouped";
+    } else if (evt.currentTarget.data-state == "grouped") {
+        evt.currentTarget.data-state == "original";
+    } else {
+        evt.currentTarget.data-state == "default";
     }
-    // Aktiviert die gewählte Form
-    evt.currentTarget.classList.add("focused-card");
 }
+
+// update warning
+const getTextWarning = (evt) => {
+    let warning = document.getElementById("text-warning");
+    // Wenn kein wort
+    if (evt.target.value.split(" ").length == 0) {
+        warning.innerHTML = " ";
+    // Wenn Leerzeichen enthalten
+    const regex = new RegExp('^[a-zA-Z0-9 ]*$');
+    } else if (regex.test(evt.target.value)) {
+        warning.innerHTML = "Text must not contain special characters!";
+    } else {
+        warning.innerHTML = "";
+    }
+}
+
+const generateHandwriting = (evt) => {
+    let textInput = document.getElementById("scribe-text-input");
+    if (document.getElementById("-text-warning").innerHTML == "") {
+        fetch('http://192.168.2.113:8000/draw/shapes/', {
+            method: 'POST',
+            headers: {
+                "X-CSRFToken": getCookie('csrftoken'),
+                'ContentType': 'application/json'},
+            body: JSON.stringify({'text': textInput.value.split(" ")}),
+        })
+        // Wartet auf die Serverantwort und konvertiert sie von JSON zu einem JavaScript-Object
+        .then(response => response.json())
+        .then(wordsData => {
+            // Fügt den erhaltenen Formpfad als neues Element zur elements_list hinzu
+            for (word of wordsData.words) {
+                global.words.push(new pathElement(word.path));
+            }
+
+            document.getElementById("left-radio").checked = true;
+            document.getElementById("ratio-range").value = 50;
+            updateAdjustCvs();
+
+        });
+    } else {
+        textInput.focus()
+    }
+}
+
+const updateAdjustCvs = () => {
+    let adCvs = document.getElementById("adjust-cvs");
+    let ratio = document.getElementById("ratio-range").value;
+    let min = 5;
+    let width = 6/100 * ratio + min
+    adCvs.style.width = width + "vh"
+    adCvs.style.height = height + "vh"
+} // TODO Big TODO
+
+const okScribe = () => {
+    scribing = groupElements(global.words);
+    global.elements.push(scribing);
+}
+
+const toggleShape = (evt) => {
+    if (evt.currentTarget.data-state == "default") {
+        evt.currentTarget.data-state == "selected";
+    } else {
+        evt.currentTarget.data-state == "default";
+    }
+}
+
 const okShapes = () => {
     // Bekommt alle aktiven Formen (normalerweise ist das nur eine oder keine)
-    let activeShapes = document.getElementsByClassName("focused-card");
-    // Fordert die aktive Form vom Server
-    fetch('http://192.168.2.113:8000/draw/shapes/', {
-        method: 'POST',
-        headers: {
-            "X-CSRFToken": getCookie('csrftoken'),
-            'ContentType': 'application/json'},
-        body: JSON.stringify({'shapeName': activeShapes[0].getAttribute("id")}), //send the shapename to the server
-    })
-    // Wartet auf die Serverantwort und konvertiert sie von JSON zu einem JavaScript-Object
-    .then(response => response.json())
-    .then(pathData => {
-        // Fügt den erhaltenen Formpfad als neues Element zur elements_list hinzu
-        global.elements.push(new pathElement(pathData.path));
-        // definiert das zugefügte Element als fokussiertes Element
-        global.focusedEl = global.elements[global.elements.length - 1]
+    let selectedShapes = document.querySelectorAll('.shape-card-cvs[data-state="selected"]');
+    for (shape of selectedShapes) {
+        global.elements.push(new pathElement(shapes[shape.data-name].path));
+    }
+    // definiert das letzte zugefügte Element als fokussiertes Element
+    global.focusedEl = global.elements[global.elements.length - 1];
 
-        // Speichert aktuelle elements_list in der sessionStorage
-        sessionStorage.setItem('elements', JSON.stringify(global.elements));
+    // Speichert aktuelle elements_list in der sessionStorage
+    sessionStorage.setItem('elements', JSON.stringify(global.elements));
 
-        // Aktualisiert die Zeichenfläche
-        redraw_canvas();
-    });
+    // Aktualisiert die Zeichenfläche
+    redraw_canvas();
 }
 
 // activate pen function
@@ -278,19 +320,41 @@ const cancelPen = () => {
     redraw_canvas();
 }
 
-///// TODO: On Save click:
-        // designname_warning.classList.remove("hidden");
 
+// Helperfunctions
 
+const createPopup = (message, buttons, onclicks) => {
+    p = document.createElement("div");
+    p.class = "popup-body";
+    p.onclick = "event.stopPropagation();event.currentTarget.remove();"
+    m = document.createElement("div");
+    m.class = "popup-message";
+    c = document.createElement("div");
+    c.class = "popup-ctrl";
+
+    for (let i; i<buttons.length; i++) {
+        b = document.createElement("button");
+        b.innerHTML = buttons[i];
+        b.onclick = onclicks[i];
+        c.appendChild(b);
+    }
+
+    p.appendChild(m);
+    p.appendChild(c);
+    document.body.appendChild(p);
+    return p;
+}
+// TODO draw shape/design cvs
 // update warning
 const getNameWarning = (evt, all_names) => {
     let warning = document.getElementById("name-warning");
     // Wenn weniger als 4 Buchstaben lang
     if (evt.target.value.length < 4) {
         warning.innerHTML = "Name must have at least 4 letters!";
-    // Wenn Leerzeichen enthalten
-    } else if (evt.target.value.includes(' ')) {
-        warning.innerHTML = "Name must not contain whitespaces!";
+    // Wenn sonder/Leerzeichen enthalten
+    const regex = new RegExp('^[a-zA-Z0-9]*$');
+    } else if (regex.test(evt.target.value)) {
+        warning.innerHTML = "Name must not contain special characters or whitespaces!";
     // Wenn Name schon vergeben
     } else if (all_names.indexOf(evt.target.value)>-1) {
         console.log(all_names.indexOf(evt.target.value));
@@ -317,7 +381,7 @@ const saveNamedDesign = (evt) => {
     if (nameWarning.innerHTML == "") {
         // Übernimmt den Namen aus dem Inputfeld
         name = nameInput.value;
-        nameInput.disabled = true; //TODO? reset at back button?
+        nameInput.disabled = true;
     } else {
         // Definiert den save als inkorrekt
         saveValid = false;
@@ -366,7 +430,7 @@ const downloadNamedDesign = (evt) => {
     }
 }
 
-// Grafik an den Roboter senden...  /// TODO: reset counter at back button press
+// Grafik an den Roboter senden...
 const sendDesignToRobot = (evt) => {
     global.sentCounter += 1;
     document.getElementById('sent-count').innerHTML = global.sentCounter + "x";
@@ -381,9 +445,12 @@ const sendDesignToRobot = (evt) => {
             })
         }
     )
-    
 }
 
+const resetAtLeave = () => {
+    global.sentCounter = 0;
+    document.getElementById('name-input').disabled = false;
+}
 // Definiert Funktionen, die bei Touchevents ausgeführt werden sollen
 
 // Beim Touch Start...
@@ -515,6 +582,7 @@ const Tmove = (evt) => {
     // Aktualisiert die Zeichenfläche
     redraw_canvas();
 }
+
 
 const Tend = (evt) => {
     // Verhindert, dass das Touchevent anders als hier definiert Wirkung zeigt (z.B. scrollen)
@@ -744,6 +812,7 @@ const middle = (a, b) => {
 const percent_between = (p, a, b) => {
     return [a[0]+int((a[0]-b[0])*p), a[1]+int((a[1]-b[1])*p)];
 }
+
 //Function that redraws the canvas
 const redraw_canvas = () => {
   //clear draw_canvas
@@ -845,7 +914,7 @@ const redraw_canvas = () => {
 
     ctx.restore();
   }
-}
+
 
 // Wenn die Seite geladen ist: Aktualisiert die Zeichenfläche,
 // damit die noch in der session-storage vorhandene elements-list

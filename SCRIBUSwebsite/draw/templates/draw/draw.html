@@ -15,20 +15,20 @@ const menu_url = {% url 'home:index' %}
             </label>
             <div id="scribe-overlay" class="overlay">
                 <div id="scribe-generate-sub">
-                    <textarea id="scribe-text-input" name="scribe-text-input" placeholder="Here goes the text you want SCRIBUS to write!"></textarea>
+                    <textarea id="scribe-text-input" name="scribe-text-input" placeholder="Here goes the text you want SCRIBUS to write!" oninput="getTextWarning(event)"></textarea>
                     <div id="generate-btn" onclick="generateHandwriting(event)">GENERATE</div>
                 </div>
                 <div id="scribe-adjust-sub">
                     <canvas id="adjust-cvs" width=1000 height=1000></canvas>
-                    <input type="range" id="ratio-range" name="ratio-range" min="0" max="100">
+                    <input type="range" id="ratio-range" name="ratio-range" min="0" max="100" oninput="updateAdjustCvs()">
                     <div id="align-ctrl">
-                        <input type="radio" name="align" id="left-radio" onclick="switchAlignment(event)" value="left" checked>
+                        <input type="radio" name="align" id="left-radio" onclick="updateAdjustCvs()" value="left" checked>
                         <label for="left-radio">LEFT</label>
                         <br>
-                        <input type="radio" name="align" id="center-radio" onclick="switchAlignment(event)" value="center">
+                        <input type="radio" name="align" id="center-radio" onclick="updateAdjustCvs()" value="center">
                         <label for="center-radio">CENTER</label>
                         <br>
-                        <input type="radio" name="align" id="right-radio" onclick="switchAlignment(event)" value="right">
+                        <input type="radio" name="align" id="right-radio" onclick="updateAdjustCvs()" value="right">
                         <label for="right-radio">RIGHT</label>
                         <br>
                     </div>
@@ -44,7 +44,8 @@ const menu_url = {% url 'home:index' %}
                 <div class="shadowbox"></div>
                 <div class="scrollbox">
                     {% for shape in shapes.all %}
-                        <canvas id="{{ shape.name }}-shape" class="card-cvs shape-card-cvs" width=1000 height=1000 data-state="default" onload="drawShapeCanvas('{{ shape.name }}-shape', {{ shape.elements.elements|safe }})"></canvas>
+                        <script>global.shapes.push({'{{ shape.name }}': {{ shape.elements.elements|safe }}})</script>
+                        <canvas id="{{ shape.name }}-shape" class="card-cvs shape-card-cvs" width=1000 height=1000 data-name="{{ shape.name }}" data-state="default" onload="drawShapeCanvas('{{ shape.name }}')" onclick="toggleShape(event)"></canvas>
                     {% endfor %}
                 </div>
             </div>
@@ -58,8 +59,9 @@ const menu_url = {% url 'home:index' %}
                 <div class="shadowbox"></div>
                 <div class="scrollbox">
                     {% for design in designs.all %}
+                        <script>global.designs.push({'{{ design.name }}': {{ design.elements.elements|safe }}})</script>
                         <div id="card-layer-grid">
-                            <canvas id="{{ design.name }}-design" class="card-cvs design-card-cvs" width=1000 height=1000 data-state="default" onload="drawDesignCanvas('{{ design.name }}-design', {{ design.elements.elements|safe }})"></canvas>
+                            <canvas id="{{ design.name }}-design" class="card-cvs design-card-cvs" width=1000 height=1000 data-name="{{ design.name }}" data-state="default" onload="drawDesignCanvas('{{ design.name }}')" onclick="toggleDesign(event)"></canvas>
                             <div id="card-overlay" data-state="off">{{ design.name }}</div>
                         </div>
                     {% endfor %}
@@ -101,14 +103,14 @@ const menu_url = {% url 'home:index' %}
         <div id="left-finish-pane">
             <div id="draw-title">TITLE</div>
             <canvas id="finish-cvs" width=1000 height=1000></canvas>
-            <img id="back-btn" src="{% static 'imgs/back.svg' %}" onclick="showBackOptions(event)">
+            <img id="back-btn" src="{% static 'imgs/back.svg' %}" onclick="createPopup('Do you want to go back to DRAW or straight back to MENU?', ['CANCEL', 'DRAW', 'MENU'], ['', 'resetOnLeave(); document.getElementById(\'main-grid\').data-state=\'draw_sub\'', 'resetOnLeave(); window.location.href=menu_url'])">
         </div>
 
         <div id="vl"></div>
 
         <div id="right-finish-pane">
             <div id="nameit">NAME IT</div>
-            <input type="text" id="name-input" name="title-input" placeholder="BeautifulDrawing" oninput="updateNameWarning(event, {{ all_designnames|safe }}); updateTitle(event);">
+            <input type="text" id="name-input" pattern="" name="title-input" placeholder="BeautifulDrawing" oninput="updateNameWarning(event, {{ all_designnames|safe }}); updateTitle(event);">
             <p id="name-warning">min 4 letters</p>
             <div id="saveit">SAVE IT</div>
             <div id="save-grid" class="split-btn-grid" data-state="before">
