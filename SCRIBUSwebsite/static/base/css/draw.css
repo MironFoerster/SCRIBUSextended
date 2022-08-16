@@ -24,131 +24,55 @@ body {
     z-index: 0;
 }
 
-.draw-ctrl-pane input:checked + .draw-ctrl-btn + .overlay {
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    margin-left: -48vh;
-    margin-top: -48vh;
-    width: 96vh;
-    height: 96vh;
-    z-index: 1;
-}
-.draw-ctrl-pane input:not(:checked) + .draw-ctrl-btn + .overlay {
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    margin-left: -48vh;
-    margin-top: -48vh;
-    width: 0;
-    height: 96vh;
-    z-index: -1;
-}
+// popup styling
 
-#scribe-overlay {
-    display: grid;
-}
-
-#scribe-generate-sub, #scribe-adjust-sub {
-    grid-row: 1;
-    grid-column: 1;
+.popup-body {
+    position: absolute;
+    top: 25%;
+    left: 25%;
+    width: 50%;
+    height: 50%;
+    padding: 10px;
     display: flex;
     flex-direction: column;
-    align-items: center;
+    justify-content: space-evenly;
+    align-items: stretch
 }
-
-#scribe-generate-sub {
-    justify-content: flex-start;
-}
-
-#scribe-adjust-sub {
-    justify-content: flex-end;
-}
-
-textarea {
-    resize: none;
-    width: 90%;
-    height: 50%
-    margin: 5%;
-}
-
-#align-ctrl{
-    display: flex;
-    justify-content: space-around;
-    align-items: stretch;
-    width: 20em;
-    height: 2em;
-    border-radius: 4px;
-    background-color: blue;
-    overflow: hidden;
+.popup-message {
 
 }
-#align-ctrl input{
-    display: none;
-}
-
-#align-ctrl label{
-    text-align: center;
-    color: rgb(195,104,57);
-    margin: 0px;
-    background-color: blue;
-    flex-basis: 0;
-    flex-grow: 1;
-    padding-top: 5px;
-    padding-bottom: 5px;
-}
-
-#align-ctrl input:checked + label{
-    background-color: green;
-    font-weight: bold;
-}
-
-#galery-overlay, #shapes-overlay {
-    display: grid;
-    padding: 2.5%;
-
-}
-
-.scrollbox {
-    grid-row: 1;
-    grid-column: 1;
-    overflow: scroll;
+.popup-ctrl {
     display: flex;
     flex-direction: row;
-    flex-wrap: wrap;
-    justify-content: space-around;
+    justify-content: space-evenly;
     align-items: center;
-    z-index: 3;
+}
+.popup-btn {
+
 }
 
-.shadowbox {
-    grid-row: 1;
-    grid-column: 1;
-    background-color: rgba(0,0,0,0);
-    box_shadow: inset 0px, 0px, 5px, rgba(0,0,0,0.7);
-    z-index: 4;
-}
+// SUBPAGE MANAGEMENT
 
-.card-cvs {
-    border-radius: 10px;
-    width: 45%;
-    height: 45%;
-    margin: 2.5%;
-}
-
-.card-cvs[data-state="selected"] {
-    box-shadow: 0px, 0px, 3px, rgba(255, 192, 0, 0.7);
-}
-
-
-.grid-container {
+#main-grid {
     display: grid;
 }
-
 .subpage {
     grid-column: 1;
     grid-row: 1;
 }
+.grid-container[data-state="finish_sub"] div[id="finish_sub"],
+.grid-container[data-state="draw_sub"] div[id="draw_sub"] {
+    opacity: 1;
+}
+.grid-container[data-state="draw_sub"] div[id="finish_sub"],
+.grid-container[data-state="finish_sub"] div[id="draw_sub"] {
+    opacity: 0;
+}
+
+
+// DRAW SUBPAGE //
+
+// PANE SETUP
 
 #draw-sub {
     display: flex;
@@ -156,57 +80,19 @@ textarea {
     justify-content: space-evenly;
     align-items: stretch;
 }
-
 .draw-ctrl-pane input{
     display: none;
 }
-
 .draw-ctrl-pane {
     display: flex;
     flex-direction: column;
     justify-content: space-evenly;
 }
-
 #left-ctrl-pane {
     align-items: flex-start;
 }
-
 #right-ctrl-pane {
     align-items: flex-end;
-}
-
-.draw-ctrl-btn{
-    margin: 0px;
-    background-color: white;
-    flex-basis: 0;
-    flex-grow: 2;
-    display: grid;
-}
-
-.draw-ctrl-btn img,
-.draw-okcancel-btn img {
-    grid-column: 1;
-    grid-row: 1;
-    margin: 10px;
-}
-
-.draw-ctrl-pane input:checked + .draw-ctrl-btn,
-.draw-ctrl-pane .draw-okcancel-btn:not([data-state="default"]) {
-    width: 200%;
-}
-.draw-ctrl-pane input:not(:checked) + .draw-ctrl-btn,
-.draw-ctrl-pane .draw-okcancel-btn[data-state="default"] {
-    width: 100%;
-}
-
-.grid-container[data-state="finish_sub"] div[id="finish_sub"],
-.grid-container[data-state="draw_sub"] div[id="draw_sub"] {
-    opacity: 1;
-}
-
-.grid-container[data-state="draw_sub"] div[id="finish_sub"],
-.grid-container[data-state="finish_sub"] div[id="draw_sub"] {
-    opacity: 0;
 }
 
 // DRAW-CONTROL MECHANISM
@@ -217,12 +103,18 @@ textarea {
     border: 2px solid white;
     border-radius: 4px;
     background-color: white;
+    flex-basis: 0;
+    flex-grow: 1;
+    display: grid;
 }
 
 .draw-ctrl-btn {
     border: 2px solid;
     border-radius: 4px;
     background-color: white;
+    flex-basis: 0;
+    flex-grow: 2;
+    display: grid;
 }
 
 #scribe + .draw-ctrl-btn {
@@ -287,18 +179,148 @@ textarea {
 
 // manage icons
 
-.draw-ctrl-pane *[checked] + .draw-ctrl-btn .icon-checked,
-.draw-ctrl-pane *[checked] .icon-checked,
-.draw-ctrl-pane *:not([checked]) + .draw-ctrl-btn .icon,
-.draw-ctrl-pane *:not([checked]) .icon {
+.draw-ctrl-btn icon, .draw-ctrl-btn icon-checked,
+.draw-okcancel-btn icon, .draw-okcancel-btn icon-checked {
+    grid-column: 1;
+    grid-row: 1;
+    margin: 10px;
+}
+
+.draw-ctrl-btn[checked] + .draw-ctrl-btn .icon-checked,
+.draw-okcancel-btn[checked] .icon-checked,
+.draw-ctrl-btn:not([checked]) + .draw-ctrl-btn .icon,
+.draw-okcancel-btn:not([checked]) .icon {
     opacity: 1;
 }
-.draw-ctrl-pane *[checked] + .draw-ctrl-btn .icon,
-.draw-ctrl-pane *[checked] .icon,
-.draw-ctrl-pane *:not([checked]) + .draw-ctrl-btn .icon-checked,
-.draw-ctrl-pane *:not([checked]) .icon-checked {
+.draw-ctrl-btn[checked] + .draw-ctrl-btn .icon,
+.draw-okcancel-btn[checked] .icon,
+.draw-ctrl-btn:not([checked]) + .draw-ctrl-btn .icon-checked,
+.draw-okcancel-btn:not([checked]) .icon-checked {
     opacity: 0;
 }
+
+// OVERLAYS
+
+.draw-ctrl-pane input:checked + .draw-ctrl-btn + .overlay {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    margin-left: -48vh;
+    margin-top: -48vh;
+    width: 96vh;
+    height: 96vh;
+    z-index: 1;
+}
+.draw-ctrl-pane input:not(:checked) + .draw-ctrl-btn + .overlay {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    margin-left: -48vh;
+    margin-top: -48vh;
+    width: 0;
+    height: 96vh;
+    z-index: -1;
+}
+
+// scribe overlay
+
+#scribe-overlay {
+    display: grid;
+}
+
+#scribe-generate-sub, #scribe-adjust-sub {
+    grid-row: 1;
+    grid-column: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+#scribe-generate-sub {
+    justify-content: flex-start;
+}
+
+#scribe-adjust-sub {
+    justify-content: flex-end;
+}
+
+textarea {
+    resize: none;
+    width: 90%;
+    height: 50%
+    margin: 5%;
+}
+
+#align-ctrl{
+    display: flex;
+    justify-content: space-around;
+    align-items: stretch;
+    width: 20em;
+    height: 2em;
+    border-radius: 4px;
+    background-color: blue;
+    overflow: hidden;
+
+}
+#align-ctrl input{
+    display: none;
+}
+
+#align-ctrl label{
+    text-align: center;
+    color: rgb(195,104,57);
+    margin: 0px;
+    background-color: blue;
+    flex-basis: 0;
+    flex-grow: 1;
+    padding-top: 5px;
+    padding-bottom: 5px;
+}
+
+#align-ctrl input:checked + label{
+    background-color: green;
+    font-weight: bold;
+}
+
+// other overlays
+
+#galery-overlay, #shapes-overlay {
+    display: grid;
+    padding: 2.5%;
+
+}
+
+.scrollbox {
+    grid-row: 1;
+    grid-column: 1;
+    overflow: scroll;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: space-around;
+    align-items: center;
+    z-index: 3;
+}
+.shadowbox {
+    grid-row: 1;
+    grid-column: 1;
+    background-color: rgba(0,0,0,0);
+    box_shadow: inset 0px, 0px, 5px, rgba(0,0,0,0.7);
+    z-index: 4;
+}
+
+.card-cvs {
+    border-radius: 10px;
+    width: 45%;
+    height: 45%;
+    margin: 2.5%;
+}
+
+.card-cvs[data-state="selected"] {
+    box-shadow: 0px, 0px, 3px, rgba(255, 192, 0, 0.7);
+}
+
+
 
 
 

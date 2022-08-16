@@ -1,9 +1,11 @@
 {% extends 'base/base.html' %}
 
-{% block beforeloadscript %}{% endblock %}
+{% block beforeloadscript %}
+const menu_url = {% url 'home:index' %}
+{% endblock %}
 
 {% block body %}
-<div class="grid-container" data-state="draw_sub">
+<div id="main-grid" data-state="draw_sub">
     <div id="draw-sub" class="subpage">
         <div id="left-ctrl-pane" class="draw-ctrl-pane">
             <input type="radio" name="draw_ctrl" id="scribe" onclick="manageDrawCtrl(event)" value="scribe">
@@ -42,7 +44,7 @@
                 <div class="shadowbox"></div>
                 <div class="scrollbox">
                     {% for shape in shapes.all %}
-                        <canvas id="{{ shape.name }}-shape" class="card-csv" width=1000 height=1000 data-state="default" onload="drawShapeCanvas('{{ shape.name }}-shape', {{ shape.elements.elements|safe }})"></canvas>
+                        <canvas id="{{ shape.name }}-shape" class="card-cvs shape-card-cvs" width=1000 height=1000 data-state="default" onload="drawShapeCanvas('{{ shape.name }}-shape', {{ shape.elements.elements|safe }})"></canvas>
                     {% endfor %}
                 </div>
             </div>
@@ -57,7 +59,7 @@
                 <div class="scrollbox">
                     {% for design in designs.all %}
                         <div id="card-layer-grid">
-                            <canvas id="{{ design.name }}-design" class="card-csv" width=1000 height=1000 data-state="default" onload="drawDesignCanvas('{{ design.name }}-design', {{ design.elements.elements|safe }})"></canvas>
+                            <canvas id="{{ design.name }}-design" class="card-cvs design-card-cvs" width=1000 height=1000 data-state="default" onload="drawDesignCanvas('{{ design.name }}-design', {{ design.elements.elements|safe }})"></canvas>
                             <div id="card-overlay" data-state="off">{{ design.name }}</div>
                         </div>
                     {% endfor %}
@@ -106,7 +108,8 @@
 
         <div id="right-finish-pane">
             <div id="nameit">NAME IT</div>
-            <input type="text"  id="title-input" name="title-input" placeholder="BeautifulDrawing" onchange="changeTitle(event)">
+            <input type="text" id="title-input" name="title-input" placeholder="BeautifulDrawing" oninput="updateNameWarning(event, {{ all_designnames|safe }}); updateTitle(event);">
+            <p id="name-warning">min 4 letters</p>
             <div id="saveit">SAVE IT</div>
             <div id="save-btn" onclick="saveNamedDesign(event)" data-state="save">SAVE</div>
             <div id="getit">GET IT</div>
