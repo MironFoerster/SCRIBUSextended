@@ -1,3 +1,14 @@
+:root{
+    --lightgreen: #008800;
+    --green: #00ff00;
+    --lightblue: #000088;
+    --blue: #0000ff;
+    --red: #ff0000;
+    --purple: #ff00ff;
+    --lightpurple: #880088;
+    --gray: #888888;
+    --lightgray: #222222;
+}
 body {
     margin: 0;
     background-color: rgb(111,76,91);#333;
@@ -51,7 +62,7 @@ body {
 }
 
 #scribe-adjust-sub {
-    justify-content: space-around;
+    justify-content: flex-end;
 }
 
 textarea {
@@ -189,22 +200,106 @@ textarea {
 }
 
 .grid-container[data-state="finish_sub"] div[id="finish_sub"],
-.grid-container[data-state="draw_sub"] div[id="draw_sub"],
-.draw-ctrl-pane input:checked + .draw-ctrl-btn .icon-focus,
-.draw-ctrl-pane .draw-okcancel-btn:not([data-state="default"]) .icon-focus,
-.draw-ctrl-pane input:not(:checked) + .draw-ctrl-btn .icon,
-.draw-ctrl-pane .draw-okcancel-btn[data-state="default"] .icon {
+.grid-container[data-state="draw_sub"] div[id="draw_sub"] {
     opacity: 1;
 }
 
 .grid-container[data-state="draw_sub"] div[id="finish_sub"],
-.grid-container[data-state="finish_sub"] div[id="draw_sub"],
-.draw-ctrl-pane input:checked + .draw-ctrl-btn .icon,
-.draw-ctrl-pane .draw-okcancel-btn:not([data-state="default"]) .icon,
-.draw-ctrl-pane input:not(:checked) + .draw-ctrl-btn .icon-focus,
-.draw-ctrl-pane .draw-okcancel-btn[data-state="default"] .icon-focus {
+.grid-container[data-state="finish_sub"] div[id="draw_sub"] {
     opacity: 0;
 }
+
+// DRAW-CONTROL MECHANISM
+
+// default styling
+
+.draw-okcancel-btn {
+    border: 2px solid white;
+    border-radius: 4px;
+    background-color: white;
+}
+
+.draw-ctrl-btn {
+    border: 2px solid;
+    border-radius: 4px;
+    background-color: white;
+}
+
+#scribe + .draw-ctrl-btn {
+    border-color: var(--lightgreen);
+}
+#shapes + .draw-ctrl-btn {
+    border-color: var(--purple);
+}
+#gallery + .draw-ctrl-btn {
+    border-color: var(--blue);
+}
+#pen + .draw-ctrl-btn {
+    border-color: var(--lightblue);
+}
+#pointer + .draw-ctrl-btn {
+    border-color: var(--gray);
+}
+
+// checked styling
+
+.draw-okcancel-btn[checked] {
+    border: 2px solid white;
+    border-radius: 4px;
+    background-color: white;
+}
+
+#ok[checked] {
+    background-color: var(--green);
+    border-color: var(--green);
+}
+#cancel[checked] {
+    background-color: var(--red);
+    border-color: var(--red);
+}
+
+#scribe[checked] + .draw-ctrl-btn {
+    background-color: var(--lightgreen);
+}
+#shapes[checked] + .draw-ctrl-btn {
+    background-color: var(--purple);
+}
+#gallery[checked] + .draw-ctrl-btn {
+    background-color: var(--blue);
+}
+#pen[checked] + .draw-ctrl-btn {
+    background-color: var(--lightblue);
+}
+#pointer[checked] + .draw-ctrl-btn {
+    background-color: var(--gray);
+}
+
+.input[type="radio"][disabled]:not(checked) + .draw-ctrl-btn,
+.draw-okcancel-btn[disabled] { //deactivating all disabled elements
+    pointer-events: none;
+    opacity: 0.5 !important;
+}
+
+.input[type="radio"][checked] + .draw-ctrl-btn,
+.draw-okcancel-btn[checked] { // widen all checked
+    width: 200%;
+}
+
+// manage icons
+
+.draw-ctrl-pane *[checked] + .draw-ctrl-btn .icon-checked,
+.draw-ctrl-pane *[checked] .icon-checked,
+.draw-ctrl-pane *:not([checked]) + .draw-ctrl-btn .icon,
+.draw-ctrl-pane *:not([checked]) .icon {
+    opacity: 1;
+}
+.draw-ctrl-pane *[checked] + .draw-ctrl-btn .icon,
+.draw-ctrl-pane *[checked] .icon,
+.draw-ctrl-pane *:not([checked]) + .draw-ctrl-btn .icon-checked,
+.draw-ctrl-pane *:not([checked]) .icon-checked {
+    opacity: 0;
+}
+
 
 
 

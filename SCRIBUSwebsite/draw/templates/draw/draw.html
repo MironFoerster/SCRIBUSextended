@@ -9,7 +9,7 @@
             <input type="radio" name="draw_ctrl" id="scribe" onclick="manageDrawCtrl(event)" value="scribe">
             <label for="scribe" class="draw-ctrl-btn">
                 <img class="icon" src="{% static 'imgs/scribe.svg' %}">
-                <img class="icon-focus" src="{% static 'imgs/scribe_focus.svg' %}">
+                <img class="icon-checked" src="{% static 'imgs/scribe_checked.svg' %}">
             </label>
             <div id="scribe-overlay" class="overlay">
                 <div id="scribe-generate-sub">
@@ -17,6 +17,8 @@
                     <div id="generate-btn" onclick="generateHandwriting(event)">GENERATE</div>
                 </div>
                 <div id="scribe-adjust-sub">
+                    <canvas id="adjust-cvs" width=1000 height=1000></canvas>
+                    <input type="range" id="ratio-range" name="ratio-range" min="0" max="100">
                     <div id="align-ctrl">
                         <input type="radio" name="align" id="left-radio" onclick="switchAlignment(event)" value="left" checked>
                         <label for="left-radio">LEFT</label>
@@ -28,15 +30,13 @@
                         <label for="right-radio">RIGHT</label>
                         <br>
                     </div>
-                    <input type="range" id="ratio-range" name="ratio-range" min="0" max="100">
-                    <canvas id="adjust-cvs" width=1000 height=1000></canvas>
                 </div>
             </div>
 
             <input type="radio" name="draw_ctrl" id="shapes" onclick="manageDrawCtrl(event)" value="shapes">
             <label for="shapes" class="draw-ctrl-btn">
                 <img class="icon" src="{% static 'imgs/shapes.svg' %}">
-                <img class="icon-focus" src="{% static 'imgs/shapes_focus.svg' %}">
+                <img class="icon-checked" src="{% static 'imgs/shapes_checked.svg' %}">
             </label>
             <div id="shapes-overlay" class="overlay">
                 <div class="shadowbox"></div>
@@ -50,7 +50,7 @@
             <input type="radio" name="draw_ctrl" id="galery" onclick="manageDrawCtrl(event)" value="galery">
             <label for="galery" class="draw-ctrl-btn">
                 <img class="icon" src="{% static 'imgs/galery.svg' %}">
-                <img class="icon-focus" src="{% static 'imgs/galery_focus.svg' %}">
+                <img class="icon-checked" src="{% static 'imgs/galery_checked.svg' %}">
             </label>
             <div id="galery-overlay" class="overlay">
                 <div class="shadowbox"></div>
@@ -71,23 +71,23 @@
             <input type="radio" name="draw_ctrl" id="pen" onclick="manageDrawCtrl(event)" value="pen">
             <label for="pen" class="draw-ctrl-btn">
                 <img class="icon" src="{% static 'imgs/pen.svg' %}">
-                <img class="icon-focus" src="{% static 'imgs/pen_focus.svg' %}">
+                <img class="icon-checked" src="{% static 'imgs/pen_checked.svg' %}">
             </label>
 
             <input type="radio" name="draw_ctrl" id="pointer" onclick="manageDrawCtrl(event)" value="pointer" checked>
             <label for="pointer" class="draw-ctrl-btn">
                 <img class="icon" src="{% static 'imgs/pointer.svg' %}">
-                <img class="icon-focus" src="{% static 'imgs/pointer_focus.svg' %}">
+                <img class="icon-checked" src="{% static 'imgs/pointer_checked.svg' %}">
             </label>
 
             <div id="cancel" class="draw-okcancel-btn" onclick="manageDrawCtrl(event)" data-state="default">
                 <img class="icon" src="{% static 'imgs/cancel.svg' %}">
-                <img class="icon-focus" src="{% static 'imgs/cancel_focus.svg' %}">
+                <img class="icon-checked" src="{% static 'imgs/cancel_checked.svg' %}">
             </div>
 
             <div id="ok" class="draw-okcancel-btn" onclick="manageDrawCtrl(event)" data-state="default">
                 <img class="icon" src="{% static 'imgs/ok.svg' %}">
-                <img class="icon-focus" src="{% static 'imgs/ok_focus.svg' %}">
+                <img class="icon-checked" src="{% static 'imgs/ok_checked.svg' %}">
             </div>
 
         </div>
