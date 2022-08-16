@@ -12,6 +12,7 @@ let global = {
     'freehand': false,
     'prevPosOnCvs': undefined,
     'touchHasNotMoved': undefined,
+    'sentCounter': 0,
 }
 
 
@@ -78,8 +79,8 @@ class pathElement {
 
 // Definiert Funktionen, die bei Buttonclicks ausgeführt werden sollen
 
-const manageDrawControl = (event) => {
-    switch (event.target.id) {
+const manageDrawControl = (evt) => {
+    switch (evt.currentTarget.id) {
         case "pointer":
             radios = document.getElementsByName("draw_ctrl");
             for (radio of radios) {
@@ -161,7 +162,7 @@ const manageDrawControl = (event) => {
 const createPopup = (message, buttons, onclicks) => {
     p = document.createElement("div");
     p.class = "popup-body";
-    p.onclick = "stopPropagation();p.remove();"
+    p.onclick = "event.stopPropagation();event.currentTarget.remove();"
     m = document.createElement("div");
     m.class = "popup-message";
     c = document.createElement("div");
@@ -302,45 +303,30 @@ const getNameWarning = (evt, all_names) => {
 
 //update title
 const updateTitle = (evt) => {
-    document.getElementById("draw-title").innerHTML = avt.target.value;
+    document.getElementById("draw-title").innerHTML = evt.target.value;
 }
 
-// Grafik an den Roboter senden...  /// TODO: get this right...
-const sbmtDrawing = () => {
-    // Initialisiert den Submit als korrekt
-    let submitValid = true;
-    // Initialisiert Variablen für Grafikname und Speicheroption
+const saveNamedDesign = (evt) => {
+    let nameInput = document.getElementById('name-input');
+    let nameWarning = document.getElementById('name-warning');
+    let saveValid = true;
     let name;
-    let save;
+    if (document.getElementById("save-grid").data-state == "after")
+    {let save = true} else {let save = false}
 
-    // Ermittelt gewählte Speicheroption
-    for (let i of save_options) {
-        if (i.checked) {
-            save = i.value;
-        }
-    }
-
-    // Wenn gespeichert werden soll...
-    if (save == 'saveprivate' || save == 'savepublic') {
-        // ...und kein Warntext vorhanden ist:
-        if (designname_warning.innerHTML == "") {
-            // Übernimmt den Namen aus dem Inputfeld
-            name = designname_input.value;
-        // ...und ein Warntext vorhanden ist:
-        } else {
-            // Definiert den Submit als inkorrekt
-            submitValid = false;
-        }
-    // Wenn nicht gespeichert werden soll:
+    if (nameWarning.innerHTML == "") {
+        // Übernimmt den Namen aus dem Inputfeld
+        name = nameInput.value;
+        nameInput.disabled = true; //TODO? reset at back button?
     } else {
-        // Definiert den Namen als null
-        name = null;
+        // Definiert den save als inkorrekt
+        saveValid = false;
     }
 
-    // Wenn der Submit korrekt ist:
-    if (submitValid) {
+    // Wenn der save korrekt ist:
+    if (saveValid) {
         // Sendet Name, elements_list und Speicheroption an den Server
-        fetch("http://192.168.2.113:8000/draw/submit/",
+        fetch("http://192.168.2.113:8000/draw/save/",
             {method : "POST",
             headers : {
                 "X-CSRFToken": getCookie('csrftoken'),
@@ -348,16 +334,54 @@ const sbmtDrawing = () => {
             body : JSON.stringify({
                 "name": name,
                 "elements": {"elements": global.elements},
-                "save": save
-
                 })
             }
         )
     // Wenn der Submit inkorrekt ist:
     } else {
+        document.getElementById('save-grid').data-state='before';
         // Fokussiert den Namensinput
-        designname_input.focus()
+        nameInput.focus()
     }
+}
+
+const downloadNamedDesign = (evt) => {
+    let nameInput = document.getElementById('name-input');
+    if (document.getElementById('save-grid').data-state == 'after') {
+        //download
+        // get canvas data
+        var image = cvs_elem.toDataURL();
+
+        // create temporary link
+        var tmpLink = document.createElement('a');
+        tmpLink.download = nameInput.value + '.png';
+        tmpLink.href = image;
+
+        // temporarily add link to body and initiate the download
+        document.body.appendChild(tmpLink);
+        tmpLink.click();
+        document.body.removeChild(tmpLink);
+    } else {
+        evt.currentTarget.parentElement.data-state='before';
+    }
+}
+
+// Grafik an den Roboter senden...  /// TODO: reset counter at back button press
+const sendDesignToRobot = (evt) => {
+    global.sentCounter += 1;
+    document.getElementById('sent-count').innerHTML = global.sentCounter + "x";
+    // Sendet elements_list an den Server
+    fetch("http://192.168.2.113:8000/draw/robodraw/",
+        {method : "POST",
+        headers : {
+            "X-CSRFToken": getCookie('csrftoken'),
+            "ContentType" : "application/json"},
+        body : JSON.stringify({
+            "elements": {"elements": global.elements}
+            })
+        }
+    )
+    
 }
 
 // Definiert Funktionen, die bei Touchevents ausgeführt werden sollen

@@ -326,9 +326,9 @@ textarea {
 
 
 
-// finish-sub
+// FINISH SUBPAGE
 
-#draw-sub {
+#finish-sub {
     display: flex;
     flex-direction: row;
     justify-content: space-evenly;
@@ -364,17 +364,6 @@ textarea {
   margin-top: -30vh;
 }
 
-#save-btn[data-state="save"],
-#download-btn[data-state="download"],
-#robot-draw-btn[data-state="send"] {
-    background-color: blue;
-}
-#save-btn[data-state="saved"],
-#download-btn[data-state="downloaded"],
-#robot-draw-btn[data-state="sent"] {
-    background-color: green;
-}
-
 #getit-flex {
     display: flex;
     flex-direction: row;
@@ -382,6 +371,44 @@ textarea {
     align-items: center;
 
 }
+
+// style split buttons
+
+.vl-btn {
+  border-left: 1px solid green;
+  height: 80%;
+}
+
+#save-grid, #download-grid, #robot-draw-grid,
+.split-btn-grid {
+    display: grid;
+}
+
+.before-split-btn, .after-split-btn {
+    grid-row: 1;
+    grid-column: 1;
+    display-flex;
+    flex-direction: row;
+    justify-content: space-around;
+    align-items: center;
+}
+
+.before-split-btn {
+    background-color: blue;
+}
+.after-split-btn {
+    background-color: green;
+}
+
+.split-btn-grid[data-state="before"] .before-split-btn,
+.split-btn-grid[data-state="after"] .after-split-btn {
+    opacity: 1;
+}
+.split-btn-grid[data-state="before"] .after-split-btn,
+.split-btn-grid[data-state="after"] .before-split-btn {
+    opacity: 0;
+}
+
 
 
 
