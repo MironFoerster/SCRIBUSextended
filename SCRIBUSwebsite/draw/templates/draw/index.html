@@ -50,7 +50,7 @@ const robodraw_url = {% url 'draw:robodraw' %}
                 <div class="scrollbox">
                     {% for shape in shapes.all %}
                         <script>global.shapes.push({'{{ shape.name }}': {{ shape.elements.elements|safe }}})</script>
-                        <canvas id="{{ shape.name }}-shape" class="card-cvs shape-card-cvs" width=1000 height=1000 data-name="{{ shape.name }}" data-state="default" onload="drawShapeCanvas('{{ shape.name }}')" onclick="toggleShape(event)"></canvas>
+                        <canvas id="{{ shape.name }}-shape" class="card-cvs shape-card-cvs" width=1000 height=1000 data-name="{{ shape.name }}" data-state="default" onload="drawCvs('{{ shape.name }}', global.shapes['{{ shape.name }}'], controls=false)" onclick="toggleShape(event)"></canvas>
                     {% endfor %}
                 </div>
             </div>
@@ -66,7 +66,7 @@ const robodraw_url = {% url 'draw:robodraw' %}
                     {% for design in designs.all %}
                         <script>global.designs.push({'{{ design.name }}': {{ design.elements.elements|safe }}})</script>
                         <div id="card-layer-grid">
-                            <canvas id="{{ design.name }}-design" class="card-cvs design-card-cvs" width=1000 height=1000 data-name="{{ design.name }}" data-state="default" onload="drawDesignCanvas('{{ design.name }}')" onclick="toggleDesign(event)"></canvas>
+                            <canvas id="{{ design.name }}-design" class="card-cvs design-card-cvs" width=1000 height=1000 data-name="{{ design.name }}" data-state="default" onload="drawCvs('{{ design.name }}', global.designs['{{ design.name }}'], controls=false)" onclick="toggleDesign(event)"></canvas>
                             <div id="card-overlay" data-state="off">{{ design.name }}</div>
                         </div>
                     {% endfor %}

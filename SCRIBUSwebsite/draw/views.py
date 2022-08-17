@@ -1,14 +1,13 @@
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import render, redirect
+from django.shortcuts import render
 from django.http import JsonResponse
 from .models import Shape, Scribing
 from gallery.models import Design
 import json
 import threading
 from django.core.cache import cache
-from . import cmdList
-from . import control
-import scribemodel as scribe
+#from . import control
+from . import scribemodel as scribe
 import os
 
 def index(request):
@@ -60,10 +59,11 @@ def robodraw(request):
     cache.set('queue', queue)
 
     if len(queue) == 1:
+        pass
         # instanciate the robot
-        scribus = control.Robot()
-        t = threading.Thread(target=scribus.draw_queue)
+        #scribus = control.Robot()
+        #t = threading.Thread(target=scribus.draw_queue)
         # draw the cmd_list
-        t.start()
+        #t.start()
     
     return JsonResponse({"success": True})

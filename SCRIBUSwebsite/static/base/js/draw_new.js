@@ -116,7 +116,7 @@ const manageDrawControl = (evt) => {
         case "ok":
             switch (true) {
                 case document.getElementById("pointer").checked:
-                    p = createPopup("Are you done Drawing?", ["NO, take me back", "YES, lets move on"], ["", "document.getElementById('main-grid').data-state='adjust_sub'"]);
+                    p = createPopup("Are you done Drawing?", ["NO, take me back", "YES, lets move on"], ["", "drawCvs('finish-cvs', global.elements, controls=false); document.getElementById('main-grid').data-state='finish_sub';"]);
                     break;
                 case document.getElementById("pen").checked:
                     okPen();
@@ -293,7 +293,7 @@ const updateAdjustCvs = () => {
         }
     }
 
-    drawCvs("adjust-cvs", global.words);
+    drawCvs("adjust-cvs", global.words, controls=false);
 }
 
 const okScribe = () => {
