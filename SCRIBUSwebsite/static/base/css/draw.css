@@ -282,6 +282,22 @@ textarea {
     font-weight: bold;
 }
 
+#adjust-cvs-placeholder {
+    height: 60%;
+    width: 60%;
+    padding: 0;
+    border: none;
+}
+
+#adjust-cvs {
+    margin: 0;
+    width: 50%;
+    height: 50%;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
 // other overlays
 
 #galery-overlay, #shapes-overlay {

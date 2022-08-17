@@ -16,6 +16,10 @@ let global = {
     'shapes': [],
     'designs': [],
     'words': [],
+    'std_line_height': 15,
+    'word_lens': [],
+    'total_words_len': undefined,
+    'word_space_len': 5,
 }
 
 
@@ -181,7 +185,7 @@ const okGallery = () => {
     sessionStorage.setItem('elements', JSON.stringify(global.elements));
 
     // Aktualisiert die Zeichenfläche
-    redraw_canvas();
+    drawCvs("main-cvs", global.elements);
 }
 
 const toggleDesign = (evt) => {
@@ -212,12 +216,12 @@ const getTextWarning = (evt) => {
 const generateHandwriting = (evt) => {
     let textInput = document.getElementById("scribe-text-input");
     if (document.getElementById("-text-warning").innerHTML == "") {
-        fetch('http://192.168.2.113:8000/draw/shapes/', {
+        fetch(generate_url, //'http://192.168.2.113:8000/draw/generate/', {
             method: 'POST',
             headers: {
                 "X-CSRFToken": getCookie('csrftoken'),
                 'ContentType': 'application/json'},
-            body: JSON.stringify({'text': textInput.value.split(" ")}),
+            body: JSON.stringify({'words': textInput.value.split(" ")}),
         })
         // Wartet auf die Serverantwort und konvertiert sie von JSON zu einem JavaScript-Object
         .then(response => response.json())
@@ -227,10 +231,15 @@ const generateHandwriting = (evt) => {
                 global.words.push(new pathElement(word.path));
             }
 
+            for (word of global.words) {
+                global.word_lens.push(word.max.x - word.min.x);
+            }
+            global.total_words_len = global.word_lens.reduce((total, current) => {return total + current;}, 0) // produce sum
+
             document.getElementById("left-radio").checked = true;
             document.getElementById("ratio-range").value = 50;
-            updateAdjustCvs();
 
+            updateAdjustCvs();
         });
     } else {
         textInput.focus()
@@ -240,15 +249,59 @@ const generateHandwriting = (evt) => {
 const updateAdjustCvs = () => {
     let adCvs = document.getElementById("adjust-cvs");
     let ratio = document.getElementById("ratio-range").value;
-    let min = 5;
-    let width = 6/100 * ratio + min
-    adCvs.style.width = width + "vh"
-    adCvs.style.height = height + "vh"
-} // TODO Big TODO
+    let border_len = adCvs.parentElement.offsetWidth;
+
+    adCvs.style.width = border_len/(ratio+1);
+    adCvs.style.height = adCvs.style.width * ratio;
+
+    adCvs.width = adCvs.style.width;
+    adCvs.height = adCvs.style.height;
+
+    // calculate min line number
+    let n_lines = Math.floor(Math.sqrt((global.total_words_len*adCvs.height)/(global.std_line_height*adCvs.width)));
+
+    let fits = false;
+    // find the fitting number of lines
+    while (!fits) { // increase line number until it fits
+        n_lines++;
+        let word_lens = JSON.parse(JSON.stringify(global.word_lens)); // copies array
+        let line_height = adCvs.height / n_lines;
+        let scale = line_height / global.std_line_height;
+        let current_word_idx = 0;
+
+        for (let i=0; i<n_lines; i++) { // for each line fill it with words
+            let line_y = global.std_line_height*i + global.std_line_height / 2;
+            let line_len = 0;
+            do { // while line isn't full add another word
+
+                if (line_len != 0) {  // if its not the first word add a space
+                    line_len += global.word_space_len;
+                }
+
+                // position and scale currend word
+                global.words[current_word_idx].scale = scale;
+                global.words[current_word_idx].origin.x = (line_len + word_lens[0]/2) * scale;
+                global.words[current_word_idx].origin.y = line_y * scale;
+                current_word_idx++;
+
+                line_len += word_lens.shift();
+
+            } while (scale * (line_len + word_lens[0] + global.word_space_len) <= adCvs.width)
+        }
+        if (word_lens.length == 0) {
+            fits = true;
+        }
+    }
+
+    drawCvs("adjust-cvs", global.words);
+}
 
 const okScribe = () => {
     scribing = groupElements(global.words);
-    global.elements.push(scribing);
+    global.elements.push(new pathElement(scribing));
+    global.words = [];
+    global.word_lens= [];
+    global.total_words_len = undefined;
 }
 
 const toggleShape = (evt) => {
@@ -272,7 +325,7 @@ const okShapes = () => {
     sessionStorage.setItem('elements', JSON.stringify(global.elements));
 
     // Aktualisiert die Zeichenfläche
-    redraw_canvas();
+    drawCvs("main-cvs", global.elements);
 }
 
 // activate pen function
@@ -280,7 +333,7 @@ const startPen = () => {
     // remove focus from any element
     global.focusedEl = undefined;
 
-    redraw_canvas();
+    drawCvs("main-cvs", global.elements);
 }
 
 const okPen = () => {
@@ -303,7 +356,7 @@ const okPen = () => {
     // focus the newly created element with the drawn elements path
     global.focusedEl = global.elements[global.elements.length - 1];
 
-    redraw_canvas();
+    drawCvs("main-cvs", global.elements);
 
     // save elements in browser
     sessionStorage.setItem('elements', JSON.stringify(global.elements));
@@ -317,7 +370,7 @@ const cancelPen = () => {
         global.drawnEl = undefined;
     }
 
-    redraw_canvas();
+    drawCvs("main-cvs", global.elements);
 }
 
 
@@ -344,6 +397,22 @@ const createPopup = (message, buttons, onclicks) => {
     document.body.appendChild(p);
     return p;
 }
+
+const groupElements = (elements) => {
+    let elements = JSON.parse(JSON.stringify(elements));
+    let groupedPath = []
+    // relates all points to global origin and appends them to the groupedPath
+    for (el of elements) {
+        for (let partpath of el.path) {
+            groupedPath.push([]);
+            for (let point of partpath) {
+                groupedPath[groupedPath.length-1].push([point[0] + el.origin.x, point[1] += el.origin.y]);
+            }
+        }
+    }
+    return groupedPath
+}
+
 // TODO draw shape/design cvs
 // update warning
 const getNameWarning = (evt, all_names) => {
@@ -390,7 +459,7 @@ const saveNamedDesign = (evt) => {
     // Wenn der save korrekt ist:
     if (saveValid) {
         // Sendet Name, elements_list und Speicheroption an den Server
-        fetch("http://192.168.2.113:8000/draw/save/",
+        fetch(save_url, //"http://192.168.2.113:8000/draw/save/",
             {method : "POST",
             headers : {
                 "X-CSRFToken": getCookie('csrftoken'),
@@ -400,7 +469,8 @@ const saveNamedDesign = (evt) => {
                 "elements": {"elements": global.elements},
                 })
             }
-        )
+        ).then(response => response.json())
+        .then(saveData => console.log("saved"))
     // Wenn der Submit inkorrekt ist:
     } else {
         document.getElementById('save-grid').data-state='before';
@@ -435,7 +505,7 @@ const sendDesignToRobot = (evt) => {
     global.sentCounter += 1;
     document.getElementById('sent-count').innerHTML = global.sentCounter + "x";
     // Sendet elements_list an den Server
-    fetch("http://192.168.2.113:8000/draw/robodraw/",
+    fetch(robodraw_url, //"http://192.168.2.113:8000/draw/robodraw/",
         {method : "POST",
         headers : {
             "X-CSRFToken": getCookie('csrftoken'),
@@ -444,7 +514,8 @@ const sendDesignToRobot = (evt) => {
             "elements": {"elements": global.elements}
             })
         }
-    )
+    ).then(response => response.json())
+    .then(saveData => console.log("drawing"))
 }
 
 const resetAtLeave = () => {
@@ -580,7 +651,7 @@ const Tmove = (evt) => {
     }
 
     // Aktualisiert die Zeichenfläche
-    redraw_canvas();
+    drawCvs("main-cvs", global.elements);
 }
 
 
@@ -729,7 +800,7 @@ const Tend = (evt) => {
     }
 
     // Aktualisiert die Zeichenfläche
-    redraw_canvas();
+    drawCvs("main-cvs", global.elements);
 
     // Speichert aktuelle elements_list in der sessionStorage
     sessionStorage.setItem('elements', JSON.stringify(global.elements));
@@ -813,12 +884,15 @@ const percent_between = (p, a, b) => {
     return [a[0]+int((a[0]-b[0])*p), a[1]+int((a[1]-b[1])*p)];
 }
 
-//Function that redraws the canvas
-const redraw_canvas = () => {
-  //clear draw_canvas
-  ctx.clearRect(0, 0, cvs_elem.width, cvs_elem.height);
-  //redraw
-  for (let el of global.elements) {
+//Function that draws a canvas
+const drawCvs = (id, elements, controls=true) => {
+    cvs = document.getElementById(id);
+    ctx = cvs.getContext("2d");
+
+    //clear draw_canvas
+    ctx.clearRect(0, 0, cvs.width, cvs.height);
+    //redraw
+    for (let el of elements) {
     ctx.save();
 
     //do the transformations
@@ -890,7 +964,7 @@ const redraw_canvas = () => {
     }
     ctx.stroke();
     //Draw the container-rect delete-button and transform-btn if focused
-    if (el == global.focusedEl) {
+    if (el == global.focusedEl && controls) {
         //container-rect
         ctx.lineWidth = 0.5 / el.scale;
         ctx.strokeRect(el.min.x, el.min.y, el.max.x-el.min.x, el.max.y-el.min.y);
@@ -913,11 +987,11 @@ const redraw_canvas = () => {
     }
 
     ctx.restore();
-  }
+}
 
 
 // Wenn die Seite geladen ist: Aktualisiert die Zeichenfläche,
 // damit die noch in der session-storage vorhandene elements-list
 // nicht erst bei der ersten Aktion, die ein redraw auslöst, zu sehen ist,
 // sondern sofort.
-redraw_canvas()
+drawCvs("main-cvs", global.elements);

@@ -5,7 +5,7 @@ app_name = 'draw'
 
 urlpatterns = [
     path('', views.index, name='index'),
-    path('submit/', views.submit, name='submit'),
-    path('shapes/', views.shapes, name='shapes'),
-
+    path('generate/', views.generate, name='generate'),
+    path('save/', views.save, name='save'),
+    path('robodraw/', views.robodraw, name='robodraw'),
 ]

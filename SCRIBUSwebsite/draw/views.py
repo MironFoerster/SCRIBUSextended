@@ -11,46 +11,10 @@ from . import control
 import scribemodel as scribe
 import os
 
-@login_required(login_url='/home/login/')
 def index(request):
     context = {'all_shapes': Shape.objects.all(),
-               'all_designnames': list(Design.objects.values_list("name", flat=True))}
+               'all_designs': Design.objects.all()}
     return render(request, 'draw/index.html', context)
-
-
-def submit(request):
-    # get the submitted data
-
-    submitData = json.loads(request.body)
-    # save sent data to db according to save settings
-    if submitData["save"] == "savepublic":
-        design = Design(name=submitData["name"], elements=submitData["elements"])
-        design.save()
-    elif submitData["save"] == "saveprivate":
-        design = Design(name=submitData["name"], user=request.user, elements=submitData["elements"])
-        design.save()
-    else:
-        print('not saving design')
-
-    # converting elements to SCode
-    cmd_list = cmdList.fromElementsList(submitData['elements']['elements'])
-    queue = cache.get('queue')
-    queue.append(cmd_list)
-    cache.set('queue', queue)
-
-    if len(queue) == 1:
-        # instanciate the robot
-        scribus = control.Robot()
-        t = threading.Thread(target=scribus.draw_queue)
-        # draw the cmd_list
-        t.start()
-    
-    return redirect('index')
-
-
-def shapes(request):
-    print('shapes view')
-    return JsonResponse(Shape.objects.get(name=json.loads(request.body)['shapeName']).path)
 
 
 base_path = "C:/Users/miron/Git/scribeAI"
@@ -67,7 +31,7 @@ model.load_weights(os.path.join(base_path, "checkpoints", run_name, "weights.hdf
 model.evaluate(test_set.batch(batch_size=1).take(1), verbose=2)
 
 
-def scribe(request):
+def generate(request):
     print('scribe view')
     words = json.loads(request.body)['words']
     preds = []
@@ -77,4 +41,29 @@ def scribe(request):
 
     scribing = Scribing(hws=pred, words=words)
     scribing.save()
-    return JsonResponse(scribing.hws)
+    return JsonResponse(scribing.hws)  # hws = [{"path":[...]}, {"path":[...]}, ...]
+
+
+def save(request):
+    submit_data = json.loads(request.body)
+
+    design = Design(name=submit_data["name"], elements=submit_data["elements"])
+    design.save()
+
+    return JsonResponse({"success": True})
+
+
+def robodraw(request):
+    submit_data = json.loads(request.body)
+    queue = cache.get('queue')
+    queue.append(submit_data['elements']['elements'])
+    cache.set('queue', queue)
+
+    if len(queue) == 1:
+        # instanciate the robot
+        scribus = control.Robot()
+        t = threading.Thread(target=scribus.draw_queue)
+        # draw the cmd_list
+        t.start()
+    
+    return JsonResponse({"success": True})

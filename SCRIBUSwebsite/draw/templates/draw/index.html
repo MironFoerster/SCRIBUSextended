@@ -1,71 +1,163 @@
-<div id="draw_control">
-    <button id="useExisting_btn" class="drw-ctrl-btn"><svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" fill="currentColor" class="bi bi-folder2-open" viewBox="0 0 16 16">
-  <path d="M1 3.5A1.5 1.5 0 0 1 2.5 2h2.764c.958 0 1.76.56 2.311 1.184C7.985 3.648 8.48 4 9 4h4.5A1.5 1.5 0 0 1 15 5.5v.64c.57.265.94.876.856 1.546l-.64 5.124A2.5 2.5 0 0 1 12.733 15H3.266a2.5 2.5 0 0 1-2.481-2.19l-.64-5.124A1.5 1.5 0 0 1 1 6.14V3.5zM2 6h12v-.5a.5.5 0 0 0-.5-.5H9c-.964 0-1.71-.629-2.174-1.154C6.374 3.334 5.82 3 5.264 3H2.5a.5.5 0 0 0-.5.5V6zm-.367 1a.5.5 0 0 0-.496.562l.64 5.124A1.5 1.5 0 0 0 3.266 14h9.468a1.5 1.5 0 0 0 1.489-1.314l.64-5.124A.5.5 0 0 0 14.367 7H1.633z"/>
-</svg></button>
-    <button id="insScribing_btn" class="drw-ctrl-btn" style="font-family:serif;font-size:18px;">ScribeAI</button>
-    <button id="insShape_btn" class="drw-ctrl-btn"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-pentagon" viewBox="0 0 16 16">
-  <path d="m8 1.288 6.842 5.56L12.267 15H3.733L1.158 6.847 8 1.288zM16 6.5 8 0 0 6.5 3 16h10l3-9.5z"/>
-</svg><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-triangle" viewBox="0 0 16 16">
-  <path d="M7.938 2.016A.13.13 0 0 1 8.002 2a.13.13 0 0 1 .063.016.146.146 0 0 1 .054.057l6.857 11.667c.036.06.035.124.002.183a.163.163 0 0 1-.054.06.116.116 0 0 1-.066.017H1.146a.115.115 0 0 1-.066-.017.163.163 0 0 1-.054-.06.176.176 0 0 1 .002-.183L7.884 2.073a.147.147 0 0 1 .054-.057zm1.044-.45a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566z"/>
-</svg><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-star" viewBox="0 0 16 16">
-  <path d="M2.866 14.85c-.078.444.36.791.746.593l4.39-2.256 4.389 2.256c.386.198.824-.149.746-.592l-.83-4.73 3.522-3.356c.33-.314.16-.888-.282-.95l-4.898-.696L8.465.792a.513.513 0 0 0-.927 0L5.354 5.12l-4.898.696c-.441.062-.612.636-.283.95l3.523 3.356-.83 4.73zm4.905-2.767-3.686 1.894.694-3.957a.565.565 0 0 0-.163-.505L1.71 6.745l4.052-.576a.525.525 0 0 0 .393-.288L8 2.223l1.847 3.658a.525.525 0 0 0 .393.288l4.052.575-2.906 2.77a.565.565 0 0 0-.163.506l.694 3.957-3.686-1.894a.503.503 0 0 0-.461 0z"/>
-</svg></button>
-    <button id="drwFreehand_btn" class="drw-ctrl-btn"><svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" fill="currentColor" class="bi bi-pencil" viewBox="0 0 16 16">
-  <path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168l10-10zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207 11.207 2.5zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293l6.5-6.5zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325z"/>
-</svg></button>
-    <button id="freeOk_btn" class="drw-ctrl-btn hidden">&#10003</button>
-    <button id="freeCancel_btn" class="drw-ctrl-btn hidden">&#10007</button>
-</div>
-<div id="insExisting_pop" class="popup hidden">
-    <div class="popup-header">Insert Existing Design</div>
-    <div class="popup-content">
-        <p>Do you want to insert a design from the gallery?</p>
-    </div>
-    <div class="popup-control">
-        <a href="{% url 'gallery:designs' %}"><button id="existOk_btn">OK</button></a>
-        <button id="existCancel_btn">Cancel</button>
-    </div>
-</div>
-<div id="insScribing_pop" class="popup hidden">
+{% extends 'base/base.html' %}
 
-</div>
-<div id="insShape_pop" class="popup hidden">
-    <div class="popup-header">Choose a Shape</div>
-    <div class="popup-content">
-        {% for i in all_shapes %}
-        <div id="{{ i.name }}"class="card shape-card" onclick="selectShape(event)">
-            <p>{{ i.name }}</p>
+{% block beforeloadscript %}
+const menu_url = {% url 'home:index' %}
+const generate_url = {% url 'draw:generate' %}
+const save_url = {% url 'draw:save' %}
+const robodraw_url = {% url 'draw:robodraw' %}
+{% endblock %}
+
+{% block body %}
+<div id="main-grid" data-state="draw_sub">
+    <div id="draw-sub" class="subpage">
+        <div id="left-ctrl-pane" class="draw-ctrl-pane">
+            <input type="radio" name="draw_ctrl" id="scribe" onclick="manageDrawCtrl(event)" value="scribe">
+            <label for="scribe" class="draw-ctrl-btn">
+                <img class="icon" src="{% static 'imgs/scribe.svg' %}">
+                <img class="icon-checked" src="{% static 'imgs/scribe_checked.svg' %}">
+            </label>
+            <div id="scribe-overlay" class="overlay">
+                <div id="scribe-generate-sub">
+                    <textarea id="scribe-text-input" name="scribe-text-input" placeholder="Here goes the text you want SCRIBUS to write!" oninput="getTextWarning(event)"></textarea>
+                    <div id="generate-btn" onclick="generateHandwriting(event)">GENERATE</div>
+                </div>
+                <div id="scribe-adjust-sub">
+                    <div id="align-ctrl">
+                        <input type="radio" name="align" id="left-radio" onclick="updateAdjustCvs()" value="left" checked>
+                        <label for="left-radio">LEFT</label>
+                        <br>
+                        <input type="radio" name="align" id="center-radio" onclick="updateAdjustCvs()" value="center">
+                        <label for="center-radio">CENTER</label>
+                        <br>
+                        <input type="radio" name="align" id="right-radio" onclick="updateAdjustCvs()" value="right">
+                        <label for="right-radio">RIGHT</label>
+                        <br>
+                    </div>
+                    <div id="adjust-cvs-placeholder">
+                        <canvas id="adjust-cvs" width=1000 height=1000></canvas>
+                    </div>
+                    <input type="range" id="ratio-range" name="ratio-range" min="0" max="100" oninput="updateAdjustCvs()">
+                </div>
+            </div>
+
+            <input type="radio" name="draw_ctrl" id="shapes" onclick="manageDrawCtrl(event)" value="shapes">
+            <label for="shapes" class="draw-ctrl-btn">
+                <img class="icon" src="{% static 'imgs/shapes.svg' %}">
+                <img class="icon-checked" src="{% static 'imgs/shapes_checked.svg' %}">
+            </label>
+            <div id="shapes-overlay" class="overlay">
+                <div class="shadowbox"></div>
+                <div class="scrollbox">
+                    {% for shape in shapes.all %}
+                        <script>global.shapes.push({'{{ shape.name }}': {{ shape.elements.elements|safe }}})</script>
+                        <canvas id="{{ shape.name }}-shape" class="card-cvs shape-card-cvs" width=1000 height=1000 data-name="{{ shape.name }}" data-state="default" onload="drawShapeCanvas('{{ shape.name }}')" onclick="toggleShape(event)"></canvas>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <input type="radio" name="draw_ctrl" id="galery" onclick="manageDrawCtrl(event)" value="galery">
+            <label for="galery" class="draw-ctrl-btn">
+                <img class="icon" src="{% static 'imgs/galery.svg' %}">
+                <img class="icon-checked" src="{% static 'imgs/galery_checked.svg' %}">
+            </label>
+            <div id="galery-overlay" class="overlay">
+                <div class="shadowbox"></div>
+                <div class="scrollbox">
+                    {% for design in designs.all %}
+                        <script>global.designs.push({'{{ design.name }}': {{ design.elements.elements|safe }}})</script>
+                        <div id="card-layer-grid">
+                            <canvas id="{{ design.name }}-design" class="card-cvs design-card-cvs" width=1000 height=1000 data-name="{{ design.name }}" data-state="default" onload="drawDesignCanvas('{{ design.name }}')" onclick="toggleDesign(event)"></canvas>
+                            <div id="card-overlay" data-state="off">{{ design.name }}</div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <canvas id="main-cvs" width=1000 height=1000></canvas>
+
+        <div id="right-ctrl-pane" class="draw-ctrl-pane">
+            <input type="radio" name="draw_ctrl" id="pen" onclick="manageDrawCtrl(event)" value="pen">
+            <label for="pen" class="draw-ctrl-btn">
+                <img class="icon" src="{% static 'imgs/pen.svg' %}">
+                <img class="icon-checked" src="{% static 'imgs/pen_checked.svg' %}">
+            </label>
+
+            <input type="radio" name="draw_ctrl" id="pointer" onclick="manageDrawCtrl(event)" value="pointer" checked>
+            <label for="pointer" class="draw-ctrl-btn">
+                <img class="icon" src="{% static 'imgs/pointer.svg' %}">
+                <img class="icon-checked" src="{% static 'imgs/pointer_checked.svg' %}">
+            </label>
+
+            <div id="cancel" class="draw-okcancel-btn" onclick="manageDrawCtrl(event)" data-state="default">
+                <img class="icon" src="{% static 'imgs/cancel.svg' %}">
+                <img class="icon-checked" src="{% static 'imgs/cancel_checked.svg' %}">
+            </div>
+
+            <div id="ok" class="draw-okcancel-btn" onclick="manageDrawCtrl(event)" data-state="default">
+                <img class="icon" src="{% static 'imgs/ok.svg' %}">
+                <img class="icon-checked" src="{% static 'imgs/ok_checked.svg' %}">
+            </div>
 
         </div>
-        {% endfor %}
+
     </div>
-    <div class="popup-control">
-        <button id="shapeOk_btn">OK</button>
-        <button id="shapeCancel_btn">Cancel</button>
+
+    <div id="finish-sub" class="subpage">
+
+        <div id="left-finish-pane">
+            <div id="draw-title">TITLE</div>
+            <canvas id="finish-cvs" width=1000 height=1000></canvas>
+            <img id="back-btn" src="{% static 'imgs/back.svg' %}" onclick="createPopup('Do you want to go back to DRAW or straight back to MENU?', ['CANCEL', 'DRAW', 'MENU'], ['', 'resetOnLeave(); document.getElementById(\'main-grid\').data-state=\'draw_sub\'', 'resetOnLeave(); window.location.href=menu_url'])">
+        </div>
+
+        <div id="vl"></div>
+
+        <div id="right-finish-pane">
+            <div id="nameit">NAME IT</div>
+            <input type="text" id="name-input" pattern="" name="title-input" placeholder="BeautifulDrawing" oninput="updateNameWarning(event, {{ all_designnames|safe }}); updateTitle(event);">
+            <p id="name-warning">min 4 letters</p>
+            <div id="saveit">SAVE IT</div>
+            <div id="save-grid" class="split-btn-grid" data-state="before">
+                <div id="save-btn" class="before-split-btn" onclick="event.currentTarget.parentElement.data-state='after'; saveNamedDesign(event)">
+                    <img src="{% static 'imgs/save.svg' %}">
+                    <div class="vl-btn"></div>
+                    <div>SAVE</div>
+                </div>
+                <div id="saved-btn" class="after-split-btn">
+                    <img src="{% static 'imgs/saved.svg' %}">
+                    <div class="vl-btn"></div>
+                    <div>SAVED</div>
+                </div>
+            </div>
+            <div id="getit">GET IT</div>
+            <div id="getit-flex">
+                <div id="download-grid" class="split-btn-grid" data-state="before">
+                    <div id="download-btn" class="before-split-btn" onclick="event.currentTarget.parentElement.data-state='after'; downloadNamedDesign(event)">
+                        <img src="{% static 'imgs/download.svg' %}">
+                        <div class="vl-btn"></div>
+                        <div>DOWNLOAD</div>
+                    </div>
+                    <div id="download-again-btn" class="after-split-btn" onclick="downloadNamedDesign(event)">
+                        <img src="{% static 'imgs/download_again.svg' %}">
+                        <div class="vl-btn"></div>
+                        <div>DOWNLOAD AGAIN</div>
+                    </div>
+                </div>
+                <div id="robot-draw-grid" class="split-btn-grid" data-state="before">
+                    <div id="robot-draw-btn" class="before-split-btn" onclick="event.currentTarget.parentElement.data-state='after'; sendDesignToRobot(event)">
+                        <div>LET SCRIBUS DRAW</div>
+                    </div>
+                    <div id="robot-draw-again-btn" class="after-split-btn" onclick="sendDesignToRobot(event)">
+                        <div id="sent-count">1x</div>
+                        <div class="vl-btn"></div>
+                        <div>+1 DRAWING</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </div>
-</div>
-
-
-
-<canvas id="drawing_cvs" width=1000 height=1000>canvas not supported</canvas>
-
-
-
-<div id="draw_submit">
-    <div id="radios">        
-        <input type="radio" name="saveoptions" id="savepublic_radio" onclick="switchNameInput(event)" value="savepublic" checked>
-        <label for="savepublic_radio">Save public</label>
-        <br>
-        <input type="radio" name="saveoptions" id="saveprivate_radio" onclick="switchNameInput(event)" value="saveprivate">
-        <label for="saveprivate_radio">Save private</label>
-        <br>
-        <input type="radio" name="saveoptions" id="dontsave_radio" onclick="switchNameInput(event)" value="dontsave">
-        <label for="dontsave_radio">Dont save</label>
-        <br>
-    </div>
-    <input type="text" id="designName_input" placeholder="Name your design" oninput="getNameWarning(event, {{ all_designnames|safe }})">
-    <p id="designName_warning">Name must have at least 4 letters!</p>
-    <a href="{% url 'draw:index' %}"><button id="sbmtDrawing_btn">Submit</button></a>
 </div>
 {% endblock %}
 
