@@ -1,37 +1,43 @@
 {% extends 'base/base.html' %}
+{% load static %}
+
+{% block stylesheet %}{% static 'base/css/draw.css' %}{% endblock %}
 
 {% block beforeloadscript %}
-const menu_url = {% url 'home:index' %}
-const generate_url = {% url 'draw:generate' %}
-const save_url = {% url 'draw:save' %}
-const robodraw_url = {% url 'draw:robodraw' %}
+const menu_url = "{% url 'home:menu' %}"
+const generate_url = "{% url 'draw:generate' %}"
+const save_url = "{% url 'draw:save' %}"
+const robodraw_url = "{% url 'draw:robodraw' %}"
+{% endblock %}
+
+{% block scriptsource %}
+{% load static %}
+{% static 'base/js/draw_new.js' %}
 {% endblock %}
 
 {% block body %}
 <div id="main-grid" data-state="draw_sub">
     <div id="draw-sub" class="subpage">
         <div id="left-ctrl-pane" class="draw-ctrl-pane">
-            <input type="radio" name="draw_ctrl" id="scribe" onclick="manageDrawCtrl(event)" value="scribe">
+            <input type="radio" name="draw_ctrl" id="scribe" onchange="manageDrawCtrl(event)" value="scribe">
             <label for="scribe" class="draw-ctrl-btn">
                 <img class="icon" src="{% static 'imgs/scribe.svg' %}">
                 <img class="icon-checked" src="{% static 'imgs/scribe_checked.svg' %}">
             </label>
-            <div id="scribe-overlay" class="overlay">
+            <div id="scribe-overlay" class="overlay" data-state="generate_sub">
                 <div id="scribe-generate-sub">
-                    <textarea id="scribe-text-input" name="scribe-text-input" placeholder="Here goes the text you want SCRIBUS to write!" oninput="getTextWarning(event)"></textarea>
+                    <textarea id="scribe-text-input" name="scribe-text-input" placeholder="Here goes the text you want SCRIBUS to write!" oninput="updateTextWarning(event)"></textarea>
+                    <p id="text-warning"></p>
                     <div id="generate-btn" onclick="generateHandwriting(event)">GENERATE</div>
                 </div>
                 <div id="scribe-adjust-sub">
                     <div id="align-ctrl">
                         <input type="radio" name="align" id="left-radio" onclick="updateAdjustCvs()" value="left" checked>
                         <label for="left-radio">LEFT</label>
-                        <br>
                         <input type="radio" name="align" id="center-radio" onclick="updateAdjustCvs()" value="center">
                         <label for="center-radio">CENTER</label>
-                        <br>
                         <input type="radio" name="align" id="right-radio" onclick="updateAdjustCvs()" value="right">
                         <label for="right-radio">RIGHT</label>
-                        <br>
                     </div>
                     <div id="adjust-cvs-placeholder">
                         <canvas id="adjust-cvs" width=1000 height=1000></canvas>
@@ -40,14 +46,14 @@ const robodraw_url = {% url 'draw:robodraw' %}
                 </div>
             </div>
 
-            <input type="radio" name="draw_ctrl" id="shapes" onclick="manageDrawCtrl(event)" value="shapes">
+            <input type="radio" name="draw_ctrl" id="shapes" onchange="manageDrawCtrl(event)" value="shapes">
             <label for="shapes" class="draw-ctrl-btn">
                 <img class="icon" src="{% static 'imgs/shapes.svg' %}">
                 <img class="icon-checked" src="{% static 'imgs/shapes_checked.svg' %}">
             </label>
             <div id="shapes-overlay" class="overlay">
                 <div class="shadowbox"></div>
-                <div class="scrollbox">
+                <div id="shapes-scrollbox" class="scrollbox">
                     {% for shape in shapes.all %}
                         <script>global.shapes.push({'{{ shape.name }}': {{ shape.elements.elements|safe }}})</script>
                         <canvas id="{{ shape.name }}-shape" class="card-cvs shape-card-cvs" width=1000 height=1000 data-name="{{ shape.name }}" data-state="default" onload="drawCvs('{{ shape.name }}', global.shapes['{{ shape.name }}'], controls=false)" onclick="toggleShape(event)"></canvas>
@@ -55,14 +61,14 @@ const robodraw_url = {% url 'draw:robodraw' %}
                 </div>
             </div>
 
-            <input type="radio" name="draw_ctrl" id="galery" onclick="manageDrawCtrl(event)" value="galery">
-            <label for="galery" class="draw-ctrl-btn">
-                <img class="icon" src="{% static 'imgs/galery.svg' %}">
-                <img class="icon-checked" src="{% static 'imgs/galery_checked.svg' %}">
+            <input type="radio" name="draw_ctrl" id="gallery" onchange="manageDrawCtrl(event)" value="gallery">
+            <label for="gallery" class="draw-ctrl-btn">
+                <img class="icon" src="{% static 'imgs/gallery.svg' %}">
+                <img class="icon-checked" src="{% static 'imgs/gallery_checked.svg' %}">
             </label>
-            <div id="galery-overlay" class="overlay">
+            <div id="gallery-overlay" class="overlay">
                 <div class="shadowbox"></div>
-                <div class="scrollbox">
+                <div id="gallery-scrollbox" class="scrollbox">
                     {% for design in designs.all %}
                         <script>global.designs.push({'{{ design.name }}': {{ design.elements.elements|safe }}})</script>
                         <div id="card-layer-grid">
@@ -74,16 +80,16 @@ const robodraw_url = {% url 'draw:robodraw' %}
             </div>
         </div>
 
-        <canvas id="main-cvs" width=1000 height=1000></canvas>
+        <canvas id="main-cvs" width="1000" height="1000" ontouchstart="Tstart(event)" ontouchmove="Tmove(event)" ontouchend="Tend(event)"></canvas>
 
         <div id="right-ctrl-pane" class="draw-ctrl-pane">
-            <input type="radio" name="draw_ctrl" id="pen" onclick="manageDrawCtrl(event)" value="pen">
+            <input type="radio" name="draw_ctrl" id="pen" onchange="manageDrawCtrl(event)" value="pen">
             <label for="pen" class="draw-ctrl-btn">
                 <img class="icon" src="{% static 'imgs/pen.svg' %}">
                 <img class="icon-checked" src="{% static 'imgs/pen_checked.svg' %}">
             </label>
 
-            <input type="radio" name="draw_ctrl" id="pointer" onclick="manageDrawCtrl(event)" value="pointer" checked>
+            <input type="radio" name="draw_ctrl" id="pointer" onchange="manageDrawCtrl(event)" value="pointer" checked>
             <label for="pointer" class="draw-ctrl-btn">
                 <img class="icon" src="{% static 'imgs/pointer.svg' %}">
                 <img class="icon-checked" src="{% static 'imgs/pointer_checked.svg' %}">
@@ -108,7 +114,7 @@ const robodraw_url = {% url 'draw:robodraw' %}
         <div id="left-finish-pane">
             <div id="draw-title">TITLE</div>
             <canvas id="finish-cvs" width=1000 height=1000></canvas>
-            <img id="back-btn" src="{% static 'imgs/back.svg' %}" onclick="createPopup('Do you want to go back to DRAW or straight back to MENU?', ['CANCEL', 'DRAW', 'MENU'], ['', 'resetOnLeave(); document.getElementById(\'main-grid\').data-state=\'draw_sub\'', 'resetOnLeave(); window.location.href=menu_url'])">
+            <img id="back-btn" src="{% static 'imgs/back.svg' %}" onclick="createPopup('Do you want to go back to DRAW or straight back to MENU?', ['CANCEL', 'DRAW', 'MENU'], ['', 'resetOnLeave();document.getElementById(\'main-grid\').dataset.state=\'draw_sub\';', 'resetOnLeave();window.location.href = window.location.origin + menu_url'])">
         </div>
 
         <div id="vl"></div>
@@ -120,12 +126,12 @@ const robodraw_url = {% url 'draw:robodraw' %}
             <div id="saveit">SAVE IT</div>
             <div id="save-grid" class="split-btn-grid" data-state="before">
                 <div id="save-btn" class="before-split-btn" onclick="event.currentTarget.parentElement.data-state='after'; saveNamedDesign(event)">
-                    <img src="{% static 'imgs/save.svg' %}">
+                    <img class="split-btn-icon" src="{% static 'imgs/save.svg' %}">
                     <div class="vl-btn"></div>
                     <div>SAVE</div>
                 </div>
                 <div id="saved-btn" class="after-split-btn">
-                    <img src="{% static 'imgs/saved.svg' %}">
+                    <img class="split-btn-icon" src="{% static 'imgs/saved.svg' %}">
                     <div class="vl-btn"></div>
                     <div>SAVED</div>
                 </div>
@@ -134,12 +140,12 @@ const robodraw_url = {% url 'draw:robodraw' %}
             <div id="getit-flex">
                 <div id="download-grid" class="split-btn-grid" data-state="before">
                     <div id="download-btn" class="before-split-btn" onclick="event.currentTarget.parentElement.data-state='after'; downloadNamedDesign(event)">
-                        <img src="{% static 'imgs/download.svg' %}">
+                        <img class="split-btn-icon" src="{% static 'imgs/download.svg' %}">
                         <div class="vl-btn"></div>
                         <div>DOWNLOAD</div>
                     </div>
                     <div id="download-again-btn" class="after-split-btn" onclick="downloadNamedDesign(event)">
-                        <img src="{% static 'imgs/download_again.svg' %}">
+                        <img class="split-btn-icon" src="{% static 'imgs/download_again.svg' %}">
                         <div class="vl-btn"></div>
                         <div>DOWNLOAD AGAIN</div>
                     </div>
@@ -159,9 +165,6 @@ const robodraw_url = {% url 'draw:robodraw' %}
 
     </div>
 </div>
+<script>drawCvs('main-cvs', global.elements);</script>
 {% endblock %}
 
-{% block scriptsource %}
-{% load static %}
-{% static 'base/js/draw.js' %}
-{% endblock %}

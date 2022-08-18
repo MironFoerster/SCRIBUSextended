@@ -7,16 +7,18 @@ import json
 import threading
 from django.core.cache import cache
 #from . import control
-from . import scribemodel as scribe
+#import tensorflow as tf
+#from . import scribemodel as scribe
 import os
 
 def index(request):
     context = {'all_shapes': Shape.objects.all(),
-               'all_designs': Design.objects.all()}
+               'all_designs': Design.objects.all(),
+               'all_designnames': list(Design.objects.values_list("name", flat=True))}
     return render(request, 'draw/index.html', context)
 
 
-base_path = "C:/Users/miron/Git/scribeAI"
+"""base_path = "C:/Users/miron/Git/scribeAI"
 
 run_name = "miron"
 
@@ -41,7 +43,9 @@ def generate(request):
     scribing = Scribing(hws=pred, words=words)
     scribing.save()
     return JsonResponse(scribing.hws)  # hws = [{"path":[...]}, {"path":[...]}, ...]
-
+"""
+def generate(request):
+    return JsonResponse({"success": True})
 
 def save(request):
     submit_data = json.loads(request.body)

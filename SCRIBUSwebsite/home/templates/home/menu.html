@@ -1,10 +1,13 @@
 {% extends 'base/base.html' %}
+{% load static %}
 
-{% block main %}
+{% block stylesheet %}{% static 'base/css/menu.css' %}{% endblock %}
 
+
+{% block body %}
 <div id="menu-header">+++SCRIBUS+++</div>
 <div id="menu-flex">
-    <a id="gallery-link" class="menu-link" href="{% url 'gallery:index' %}">
+    <a id="gallery-link" class="menu-link" href="{% url 'gallery:designs' %}">
         <img class="menu-icon" src="{% static 'imgs/gallery_link.svg' %}">
         <div class="menu-link-text">GALLERY</div>
     </a>

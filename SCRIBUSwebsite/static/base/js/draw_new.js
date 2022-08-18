@@ -1,6 +1,3 @@
-const cvs_elem = document.getElementById("drawing_cvs");
-const ctx = cvs_elem.getContext('2d');
-
 // Erstellt ein Objekt für alle Variablen, die global verwendet werden
 let global = {
     'elements': JSON.parse(sessionStorage.getItem('elements')) || [],
@@ -27,7 +24,7 @@ let global = {
 class pathElement {
     // Für das Erstellen eines p.E. wird benötigt: der Pfad
     // und der Koordinatenursprung zu dem der Pfad relativ ist
-    constructor(path=[[[0, 0]]], origin={'x': cvs_elem.width/2, 'y': cvs_elem.height/2}, translate='path_to_origin') {
+    constructor(path=[[[0, 0]]], origin={'x': 0, 'y': 0}, translate='path_to_origin') {
         this.path = path; // Struktur des Pfads: [  [[x, y], [x, y], [x, y]], [[x, y], [x, y], [x, y]]  ]
         this.origin = {'x': undefined, 'y': undefined};
         this.rotation = 0;
@@ -86,76 +83,87 @@ class pathElement {
 
 // Definiert Funktionen, die bei Buttonclicks ausgeführt werden sollen
 
-const manageDrawControl = (evt) => {
+const manageDrawCtrl = (evt) => {
     switch (evt.currentTarget.id) {
         case "pointer":
             radios = document.getElementsByName("draw_ctrl");
             for (radio of radios) {
-                radio.disabled = false;
+                radio.removeAttribute("disabled");
             }
+            break;
         case "cancel":
             switch (true) {
                 case document.getElementById("pointer").checked:
-                    p = createPopup("Do you want to back to MENU or just CLEAR what you have drawn?", ["CANCEL", "MENU", "CLEAR"], ["", "window.location.href = "+menu_url, "clearDrawing();"]);
+                    p = createPopup("Do you want to back to MENU or just CLEAR what you have drawn?", ["CANCEL", "MENU", "CLEAR"], ["", "window.location.href = window.location.origin + menu_url;", "global.elements = []; drawCvs('main-cvs', global.elements);"]);
                     break;
                 case document.getElementById("pen").checked:
                     cancelPen();
                 case document.getElementById("scribe").checked:
+                    document.getElementById("ok").removeAttribute("disabled");
                 case document.getElementById("shapes").checked:
                 case document.getElementById("gallery").checked:
                 default:
                     // reset to default view
                     radios = document.getElementsByName("draw_ctrl");
                     for (radio of radios) {
-                        radio.disabled = false;
+                        radio.removeAttribute("disabled");
                     }
-                    document.getElementById("ok").disabled = false;
                     document.getElementById("pointer").checked = true;
             }
+            break;
 
         case "ok":
             switch (true) {
                 case document.getElementById("pointer").checked:
-                    p = createPopup("Are you done Drawing?", ["NO, take me back", "YES, lets move on"], ["", "drawCvs('finish-cvs', global.elements, controls=false); document.getElementById('main-grid').data-state='finish_sub';"]);
+                    p = createPopup("Are you done Drawing?", ["NO, take me back", "YES, lets move on"], [";", "console.log('draw');drawCvs('finish-cvs', global.elements, controls=false); document.getElementById('main-grid').dataset.state='finish_sub';"]);
                     break;
                 case document.getElementById("pen").checked:
                     okPen();
+                    break;
                 case document.getElementById("scribe").checked:
                     okScribe();
+                    break;
                 case document.getElementById("shapes").checked:
                     okShapes();
+                    break;
                 case document.getElementById("gallery").checked:
                     okGallery();
-                default:
-                    radios = document.getElementsByName("draw_ctrl");
-                    for (radio of radios) {
-                        radio.disabled = false;
-                    }
-                    document.getElementById("ok").disabled = false;
-                    document.getElementById("pointer").checked = true;
+                    break;
             }
+            if (!document.getElementById("pointer").checked) {
+                radios = document.getElementsByName("draw_ctrl");
+                for (radio of radios) {
+                    radio.removeAttribute("disabled");
+                }
+                document.getElementById("pointer").checked = true;
+            }
+            break;
         case "pen":
             startPen();
-
+            break;
         case "scribe":
             document.getElementById("scribe-text-input").innerHTML = "";
-            document.getElementById("ok").disabled = true;
+            document.getElementById("ok").setAttribute("disabled", "disabled");
+            break;
         case "shapes":
             cards = document.getElementsByClassName("shape-card-cvs");
             for (card of cards) {
-                card.data-state = "default";
+                card.dataset.state = "default";
             }
+            break;
         case "gallery":
             cards = document.getElementsByClassName("design-card-cvs");
             for (card of cards) {
-                card.data-state = "default";
+                card.dataset.state = "default";
             }
+            break;
+    }
 
-        default:
-            radios = document.getElementsByName("draw_ctrl");
-            for (radio of radios) {
-                radio.disabled = true;
-            }
+    if (!["pointer", "ok", "cancel"].includes(evt.currentTarget.id)) {
+        radios = document.getElementsByName("draw_ctrl");
+        for (radio of radios) {
+            radio.disabled = true;
+        }
     }
 }
 
@@ -168,11 +176,11 @@ const okGallery = () => {
     let originalDesigns = document.querySelectorAll('.design-card-cvs[data-state="original"]');
 
     for (design of groupedDesigns) {
-        let groupedPath = groupElements(global.designs[design.data-name]);
+        let groupedPath = groupElements(global.designs[design.dataset.name]);
         global.elements.push(new pathElement(groupedPath));
     }
     for (design of originalDesigns) {
-        let designObject = global.designs[design.data-name]
+        let designObject = global.designs[design.dataset.name]
         for (element of designObject) {
             global.elements.push(new pathElement(element.path, origin=element.origin));
         }
@@ -189,24 +197,24 @@ const okGallery = () => {
 }
 
 const toggleDesign = (evt) => {
-    if (evt.currentTarget.data-state == "default") {
-        evt.currentTarget.data-state == "grouped";
-    } else if (evt.currentTarget.data-state == "grouped") {
-        evt.currentTarget.data-state == "original";
+    if (evt.currentTarget.dataset.state == "default") {
+        evt.currentTarget.dataset.state == "grouped";
+    } else if (evt.currentTarget.dataset.state == "grouped") {
+        evt.currentTarget.dataset.state == "original";
     } else {
-        evt.currentTarget.data-state == "default";
+        evt.currentTarget.dataset.state == "default";
     }
 }
 
 // update warning
-const getTextWarning = (evt) => {
+const updateTextWarning = (evt) => {
     let warning = document.getElementById("text-warning");
+    // Wenn Leerzeichen enthalten
+    const regex = new RegExp('^[a-zA-Z0-9 ]*$');
     // Wenn kein wort
     if (evt.target.value.split(" ").length == 0) {
         warning.innerHTML = " ";
-    // Wenn Leerzeichen enthalten
-    const regex = new RegExp('^[a-zA-Z0-9 ]*$');
-    } else if (regex.test(evt.target.value)) {
+    } else if (!regex.test(evt.target.value)) {
         warning.innerHTML = "Text must not contain special characters!";
     } else {
         warning.innerHTML = "";
@@ -215,15 +223,14 @@ const getTextWarning = (evt) => {
 
 const generateHandwriting = (evt) => {
     let textInput = document.getElementById("scribe-text-input");
-    if (document.getElementById("-text-warning").innerHTML == "") {
-        fetch(generate_url, //'http://192.168.2.113:8000/draw/generate/', {
+    if (document.getElementById("text-warning").innerHTML == "") {
+        fetch(window.location.origin + generate_url, {
             method: 'POST',
             headers: {
                 "X-CSRFToken": getCookie('csrftoken'),
                 'ContentType': 'application/json'},
             body: JSON.stringify({'words': textInput.value.split(" ")}),
         })
-        // Wartet auf die Serverantwort und konvertiert sie von JSON zu einem JavaScript-Object
         .then(response => response.json())
         .then(wordsData => {
             // Fügt den erhaltenen Formpfad als neues Element zur elements_list hinzu
@@ -240,6 +247,7 @@ const generateHandwriting = (evt) => {
             document.getElementById("ratio-range").value = 50;
 
             updateAdjustCvs();
+            document.getElementById("scribe-overlay").dataset.state = "adjust_sub"
         });
     } else {
         textInput.focus()
@@ -305,10 +313,10 @@ const okScribe = () => {
 }
 
 const toggleShape = (evt) => {
-    if (evt.currentTarget.data-state == "default") {
-        evt.currentTarget.data-state == "selected";
+    if (evt.currentTarget.dataset.state == "default") {
+        evt.currentTarget.dataset.state == "selected";
     } else {
-        evt.currentTarget.data-state == "default";
+        evt.currentTarget.dataset.state == "default";
     }
 }
 
@@ -316,7 +324,7 @@ const okShapes = () => {
     // Bekommt alle aktiven Formen (normalerweise ist das nur eine oder keine)
     let selectedShapes = document.querySelectorAll('.shape-card-cvs[data-state="selected"]');
     for (shape of selectedShapes) {
-        global.elements.push(new pathElement(shapes[shape.data-name].path));
+        global.elements.push(new pathElement(shapes[shape.dataset.name].path));
     }
     // definiert das letzte zugefügte Element als fokussiertes Element
     global.focusedEl = global.elements[global.elements.length - 1];
@@ -378,31 +386,39 @@ const cancelPen = () => {
 
 const createPopup = (message, buttons, onclicks) => {
     p = document.createElement("div");
-    p.class = "popup-body";
-    p.onclick = "event.stopPropagation();event.currentTarget.remove();"
+    p.className = "popup-body";
+    p.setAttribute('onclick',"event.stopPropagation();event.currentTarget.remove();document.getElementById('pop-shader').remove();");
     m = document.createElement("div");
-    m.class = "popup-message";
+    m.className = "popup-message";
+    m.innerHTML = message;
     c = document.createElement("div");
-    c.class = "popup-ctrl";
+    c.className = "popup-ctrl";
 
-    for (let i; i<buttons.length; i++) {
+    s = document.createElement("div");
+    s.id = "pop-shader";
+    s.setAttribute('onclick',"event.stopPropagation();")
+
+    for (let i=0; i<buttons.length; i++) {
         b = document.createElement("button");
         b.innerHTML = buttons[i];
-        b.onclick = onclicks[i];
+        b.className = "popup-btn";
+        b.setAttribute('onclick', onclicks[i]);
         c.appendChild(b);
     }
 
     p.appendChild(m);
     p.appendChild(c);
+
+    document.body.appendChild(s);
     document.body.appendChild(p);
     return p;
 }
 
 const groupElements = (elements) => {
-    let elements = JSON.parse(JSON.stringify(elements));
+    let els = JSON.parse(JSON.stringify(elements));
     let groupedPath = []
     // relates all points to global origin and appends them to the groupedPath
-    for (el of elements) {
+    for (el of els) {
         for (let partpath of el.path) {
             groupedPath.push([]);
             for (let point of partpath) {
@@ -413,16 +429,15 @@ const groupElements = (elements) => {
     return groupedPath
 }
 
-// TODO draw shape/design cvs
 // update warning
-const getNameWarning = (evt, all_names) => {
+const updateNameWarning = (evt, all_names) => {
     let warning = document.getElementById("name-warning");
-    // Wenn weniger als 4 Buchstaben lang
-    if (evt.target.value.length < 4) {
-        warning.innerHTML = "Name must have at least 4 letters!";
     // Wenn sonder/Leerzeichen enthalten
     const regex = new RegExp('^[a-zA-Z0-9]*$');
-    } else if (regex.test(evt.target.value)) {
+        // Wenn weniger als 4 Buchstaben lang
+    if (evt.target.value.length < 4) {
+        warning.innerHTML = "Name must have at least 4 letters!";
+    } else if (!regex.test(evt.target.value)) {
         warning.innerHTML = "Name must not contain special characters or whitespaces!";
     // Wenn Name schon vergeben
     } else if (all_names.indexOf(evt.target.value)>-1) {
@@ -444,13 +459,13 @@ const saveNamedDesign = (evt) => {
     let nameWarning = document.getElementById('name-warning');
     let saveValid = true;
     let name;
-    if (document.getElementById("save-grid").data-state == "after")
+    if (document.getElementById("save-grid").dataset.state == "after")
     {let save = true} else {let save = false}
 
     if (nameWarning.innerHTML == "") {
         // Übernimmt den Namen aus dem Inputfeld
         name = nameInput.value;
-        nameInput.disabled = true;
+        nameInput.setAttribute("disabled", "disabled");
     } else {
         // Definiert den save als inkorrekt
         saveValid = false;
@@ -459,8 +474,8 @@ const saveNamedDesign = (evt) => {
     // Wenn der save korrekt ist:
     if (saveValid) {
         // Sendet Name, elements_list und Speicheroption an den Server
-        fetch(save_url, //"http://192.168.2.113:8000/draw/save/",
-            {method : "POST",
+        fetch(window.location.origin + save_url, {
+            method : "POST",
             headers : {
                 "X-CSRFToken": getCookie('csrftoken'),
                 "ContentType" : "application/json"},
@@ -473,7 +488,7 @@ const saveNamedDesign = (evt) => {
         .then(saveData => console.log("saved"))
     // Wenn der Submit inkorrekt ist:
     } else {
-        document.getElementById('save-grid').data-state='before';
+        document.getElementById('save-grid').dataset.state='before';
         // Fokussiert den Namensinput
         nameInput.focus()
     }
@@ -481,10 +496,10 @@ const saveNamedDesign = (evt) => {
 
 const downloadNamedDesign = (evt) => {
     let nameInput = document.getElementById('name-input');
-    if (document.getElementById('save-grid').data-state == 'after') {
+    if (document.getElementById('save-grid').dataset.state == 'after') {
         //download
         // get canvas data
-        var image = cvs_elem.toDataURL();
+        var image = document.getElementById('finish-cvs').toDataURL();
 
         // create temporary link
         var tmpLink = document.createElement('a');
@@ -496,7 +511,7 @@ const downloadNamedDesign = (evt) => {
         tmpLink.click();
         document.body.removeChild(tmpLink);
     } else {
-        evt.currentTarget.parentElement.data-state='before';
+        evt.currentTarget.parentElement.dataset.state='before';
     }
 }
 
@@ -505,8 +520,8 @@ const sendDesignToRobot = (evt) => {
     global.sentCounter += 1;
     document.getElementById('sent-count').innerHTML = global.sentCounter + "x";
     // Sendet elements_list an den Server
-    fetch(robodraw_url, //"http://192.168.2.113:8000/draw/robodraw/",
-        {method : "POST",
+    fetch(window.location.origin + robodraw_url, {
+        method : "POST",
         headers : {
             "X-CSRFToken": getCookie('csrftoken'),
             "ContentType" : "application/json"},
@@ -518,9 +533,9 @@ const sendDesignToRobot = (evt) => {
     .then(saveData => console.log("drawing"))
 }
 
-const resetAtLeave = () => {
+const resetOnLeave = () => {
     global.sentCounter = 0;
-    document.getElementById('name-input').disabled = false;
+    document.getElementById('name-input').removeAttribute("disabled");
 }
 // Definiert Funktionen, die bei Touchevents ausgeführt werden sollen
 
@@ -528,21 +543,24 @@ const resetAtLeave = () => {
 const Tstart = (evt) => {
     // Verhindert, dass das Touchevent anders als hier definiert Wirkung zeigt (z.B. scrollen)
     evt.preventDefault();
+    console.log("tstart");
 
     // Bekommt Liste von Touch-Objekten, die durch aktuelles Touch-Event verändert wurden
     // (normalerweise nur ein Touch-Objekt)
     let touches = evt.changedTouches;
 
     // Ermittelt die X- und Y-Abstände des canvas-Elements zum Rand des Bildschirms
-    let cvsRect = cvs_elem.getBoundingClientRect();
+    let cvsRect = evt.currentTarget.getBoundingClientRect();
     global.cvsOffset = {'left': cvsRect.left, 'top': cvsRect.top};
 
     // Berechnet die Position des Touchs auf dem canvas-Element
     // unter Berücksichtigung von canvas-Offset, CSS-Skalierung und canvas-Breite von 1000 Einheiten
-    global.posOnCvs = {'x': (touches[0].pageX - global.cvsOffset.left) * (1000/parseInt(window.getComputedStyle(cvs_elem).width)), 'y': (touches[0].pageY - global.cvsOffset.top) * (1000/parseInt(window.getComputedStyle(cvs_elem).height))};
+    global.posOnCvs = {'x': (touches[0].pageX - global.cvsOffset.left) * (1000/parseInt(window.getComputedStyle(evt.currentTarget).width)), 'y': (touches[0].pageY - global.cvsOffset.top) * (1000/parseInt(window.getComputedStyle(evt.currentTarget).height))};
 
     // Wenn Freihandzeihnen aktiv:
     if (document.getElementById('pen').checked) {
+        console.log("freehand");
+        console.log(global.drawnEl);
         // Wenn Zeichnung noch nicht begonnen:
         if (global.drawnEl == undefined) {
             // Fügt ein neues Element zur elements_list hinzu
@@ -606,10 +624,10 @@ const Tmove = (evt) => {
     let touches = evt.changedTouches;
 
     // Berechnet die Position des Touchs auf dem canvas-Element
-    global.posOnCvs = {'x': (touches[0].pageX - global.cvsOffset.left) * (1000/parseInt(window.getComputedStyle(cvs_elem).width)), 'y': (touches[0].pageY - global.cvsOffset.top) * (1000/parseInt(window.getComputedStyle(cvs_elem).height))};
+    global.posOnCvs = {'x': (touches[0].pageX - global.cvsOffset.left) * (1000/parseInt(window.getComputedStyle(evt.currentTarget).width)), 'y': (touches[0].pageY - global.cvsOffset.top) * (1000/parseInt(window.getComputedStyle(evt.currentTarget).height))};
 
     // Wenn Freihandzeihnen aktiv:
-    if (global.freehand == true) {
+    if (document.getElementById('pen').checked) {
         // Fügt die aktuelle Touchposition als weiteren Punkt zum aktuellen Teilpfad hinzu
         addPointToFreehand(getPointOnEl(global.posOnCvs, global.drawnEl));
 
@@ -664,14 +682,14 @@ const Tend = (evt) => {
     let touches = evt.changedTouches;
 
     // Berechnet die Position des Touchs auf dem canvas-Element
-    global.posOnCvs = {'x': (touches[0].pageX - global.cvsOffset.left) * (1000/parseInt(window.getComputedStyle(cvs_elem).width)), 'y': (touches[0].pageY - global.cvsOffset.top) * (1000/parseInt(window.getComputedStyle(cvs_elem).height))};
+    global.posOnCvs = {'x': (touches[0].pageX - global.cvsOffset.left) * (1000/parseInt(window.getComputedStyle(evt.currentTarget).width)), 'y': (touches[0].pageY - global.cvsOffset.top) * (1000/parseInt(window.getComputedStyle(evt.currentTarget).height))};
 
     // Initialisiert Variablen ........................................
     let XOnButton;
     let YOnButton;
 
     // Wenn Freihandzeihnen aktiv und der Touch endet: Tut garnichts
-    if (global.freehand == true) {
+    if (document.getElementById('pen').checked) {
 
     // Wenn der Touch sich nicht bewegt hat, also ein click war:
     } else if (global.touchHasNotMoved) {
@@ -806,13 +824,6 @@ const Tend = (evt) => {
     sessionStorage.setItem('elements', JSON.stringify(global.elements));
 }
 
-
-// Fügt dem canvas-Element Event-Listener für alle Touch-Events mit der entsprechenden Funktion zu.
-cvs_elem.addEventListener('touchstart', Tstart, false);
-cvs_elem.addEventListener('touchmove', Tmove, false);
-cvs_elem.addEventListener('touchend', Tend, false);
-
-
 // Helferfunktionen...
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 const getCookie = (name) => { // kopiert von: https://docs.djangoproject.com/en/3.1/ref/csrf/#acquiring-the-token-if-csrf-use-sessions-and-csrf-cookie-httponly-are-false
@@ -893,105 +904,97 @@ const drawCvs = (id, elements, controls=true) => {
     ctx.clearRect(0, 0, cvs.width, cvs.height);
     //redraw
     for (let el of elements) {
-    ctx.save();
+        ctx.save();
 
-    //do the transformations
-    ctx.translate(el.origin.x, el.origin.y);
-    ctx.scale(el.scale, el.scale);
-    ctx.rotate(el.rotation*Math.PI/180);
+        //do the transformations
+        ctx.translate(el.origin.x, el.origin.y);
+        ctx.scale(el.scale, el.scale);
+        ctx.rotate(el.rotation*Math.PI/180);
 
 
-    // make path settings
-    ctx.beginPath();
-    ctx.lineCap = 'round'; ///nice trick! makes partpaths with only one point appear as a point on the canvas
-    ctx.strokeStyle = "black";
-    ctx.lineJoin = 'round';
-    if (el == global.drawnEl) {
-        ctx.lineWidth = 5 / el.scale;
-    } else {
-        ctx.lineWidth = 3 / el.scale;
-    }
+        // make path settings
+        ctx.beginPath();
+        ctx.lineCap = 'round'; ///nice trick! makes partpaths with only one point appear as a point on the canvas
+        ctx.strokeStyle = "black";
+        ctx.lineJoin = 'round';
+        if (el == global.drawnEl) {
+            ctx.lineWidth = 5 / el.scale;
+        } else {
+            ctx.lineWidth = 3 / el.scale;
+        }
 
-    // draw the path
-    for (let partpath of el.path) {
-        ctx.moveTo(...partpath[0]);
+        // draw the path
+        for (let partpath of el.path) {
+            ctx.moveTo(...partpath[0]);
 
-        if (el.smooth == 0) {  // keine Abrundung
-            for (let point of partpath.slice(1, partpath.length)) {
-                ctx.lineTo(point[0], point[1]);
-            }
-        } else if (el.smooth == 1) {  // vollständige Abrundung
-            if (partpath[0] == partpath[-1]) {
-                ctx.moveTo(...middle(partpath[0], partpath[1]));
-            } else {
-                ctx.lineTo(...middle(partpath[0], partpath[1]));
-            }
+            if (el.smooth == 0) {  // keine Abrundung
+                for (let point of partpath.slice(1, partpath.length)) {
+                    ctx.lineTo(point[0], point[1]);
+                }
+            } else if (el.smooth == 1) {  // vollständige Abrundung
+                if (partpath[0] == partpath[-1]) {
+                    ctx.moveTo(...middle(partpath[0], partpath[1]));
+                } else {
+                    ctx.lineTo(...middle(partpath[0], partpath[1]));
+                }
 
-            for (let i=1; i<partpath.length-1; i++) {
-                let ctrl_point = partpath[i];
-                let next_point = partpath[i+1];
+                for (let i=1; i<partpath.length-1; i++) {
+                    let ctrl_point = partpath[i];
+                    let next_point = partpath[i+1];
 
-                ctx.quadraticCurveTo(...ctrl_point, ...middle(ctrl_point, next_point));
-            }
-            if (partpath[0] == partpath[-1]) {
-                ctx.quadraticCurveTo(...partpath[0], ...middle(partpath[0], partpath[1]));
-            } else {
+                    ctx.quadraticCurveTo(...ctrl_point, ...middle(ctrl_point, next_point));
+                }
+                if (partpath[0] == partpath[-1]) {
+                    ctx.quadraticCurveTo(...partpath[0], ...middle(partpath[0], partpath[1]));
+                } else {
+                    ctx.lineTo(...partpath[-1]);
+                }
+            } else {  // teilweise Abrundung
+                if (partpath[0] == partpath[-1]) {
+                    ctx.moveTo(...percent_between(0.5 + (1 - el.smooth) / 2, partpath[0], partpath[1]));
+                } else {
+                    ctx.lineTo(...percent_between(0.5 + (1 - el.smooth) / 2, partpath[0], partpath[1]));
+                }
+
+                for (let i=1; i<partpath.length-1; i++) {
+                    let ctrl_point = partpath[i];
+                    let next_point = partpath[i+1];
+
+                    ctx.quadraticCurveTo(...ctrl_point, ...percent_between(el.smooth/2, ctrl_point, next_point));
+                    ctx.lineTo(...percent_between((1-el.smooth)/(1-el.smooth/2), percent_between(el.smooth/2, ctrl_point, next_point), next_point));
+                }
                 ctx.lineTo(...partpath[-1]);
-            }
-        } else {  // teilweise Abrundung
-            if (partpath[0] == partpath[-1]) {
-                ctx.moveTo(...percent_between(0.5 + (1 - el.smooth) / 2, partpath[0], partpath[1]));
-            } else {
-                ctx.lineTo(...percent_between(0.5 + (1 - el.smooth) / 2, partpath[0], partpath[1]));
-            }
-
-            for (let i=1; i<partpath.length-1; i++) {
-                let ctrl_point = partpath[i];
-                let next_point = partpath[i+1];
-
-                ctx.quadraticCurveTo(...ctrl_point, ...percent_between(el.smooth/2, ctrl_point, next_point));
-                ctx.lineTo(...percent_between((1-el.smooth)/(1-el.smooth/2), percent_between(el.smooth/2, ctrl_point, next_point), next_point));
-            }
-            ctx.lineTo(...partpath[-1]);
-            if (partpath[0] == partpath[-1]) {
-                ctx.quadraticCurveTo(...partpath[0], ...percent_between(el.smooth/2, partpath[0], partpath[1]));
-                ctx.lineTo(...percent_between((1 - el.smooth) / (1 - el.smooth / 2), percent_between(el.smooth/2, partpath[0], partpath[1]), partpath[1]));
-            } else {
-                ctx.lineTo(...partpath[-1])
+                if (partpath[0] == partpath[-1]) {
+                    ctx.quadraticCurveTo(...partpath[0], ...percent_between(el.smooth/2, partpath[0], partpath[1]));
+                    ctx.lineTo(...percent_between((1 - el.smooth) / (1 - el.smooth / 2), percent_between(el.smooth/2, partpath[0], partpath[1]), partpath[1]));
+                } else {
+                    ctx.lineTo(...partpath[-1])
+                }
             }
         }
-      }
-    }
-    ctx.stroke();
-    //Draw the container-rect delete-button and transform-btn if focused
-    if (el == global.focusedEl && controls) {
-        //container-rect
-        ctx.lineWidth = 0.5 / el.scale;
-        ctx.strokeRect(el.min.x, el.min.y, el.max.x-el.min.x, el.max.y-el.min.y);
-
-        //delete-circle
-        ctx.beginPath();
-        ctx.strokeStyle = "red";
-        ctx.fillStyle = "red";
-        ctx.arc(el.min.x, el.min.y, 30 / el.scale, 0, 2*Math.PI);
-        ctx.fill();
         ctx.stroke();
+        //Draw the container-rect delete-button and transform-btn if focused
+        if (el == global.focusedEl && controls) {
+            //container-rect
+            ctx.lineWidth = 0.5 / el.scale;
+            ctx.strokeRect(el.min.x, el.min.y, el.max.x-el.min.x, el.max.y-el.min.y);
 
-        //transform-button circle
-        ctx.beginPath();
-        ctx.strokeStyle = "gray";
-        ctx.fillStyle = "gray";
-        ctx.arc(el.max.x, el.max.y, 30 / el.scale, 0, 2*Math.PI);
-        ctx.fill();
-        ctx.stroke();
-    }
+            //delete-circle
+            ctx.beginPath();
+            ctx.strokeStyle = "red";
+            ctx.fillStyle = "red";
+            ctx.arc(el.min.x, el.min.y, 30 / el.scale, 0, 2*Math.PI);
+            ctx.fill();
+            ctx.stroke();
 
+            //transform-button circle
+            ctx.beginPath();
+            ctx.strokeStyle = "gray";
+            ctx.fillStyle = "gray";
+            ctx.arc(el.max.x, el.max.y, 30 / el.scale, 0, 2*Math.PI);
+            ctx.fill();
+            ctx.stroke();
+        }
     ctx.restore();
+    }
 }
-
-
-// Wenn die Seite geladen ist: Aktualisiert die Zeichenfläche,
-// damit die noch in der session-storage vorhandene elements-list
-// nicht erst bei der ersten Aktion, die ein redraw auslöst, zu sehen ist,
-// sondern sofort.
-drawCvs("main-cvs", global.elements);
