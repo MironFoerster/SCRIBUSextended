@@ -431,11 +431,18 @@ textarea {
     justify-content: space-around;
 }
 
+#right-finish-pane {
+    margin-top: 10vh;
+    margin-bottom: 10vh;
+}
+
 #draw-title {
     height: 15vh;
+    font-size: 40px;
+    letter-spacing: 10px;
     display: flex;
-  justify-content: center;
-  align-items: center;
+    justify-content: center;
+    align-items: center;
 }
 
 #finish-cvs {
@@ -443,36 +450,67 @@ textarea {
     width: 60vh;
     height: 60vh;
     box-shadow: 2px 2px 5px rgb(0,0,0,0.3);
+    align-self: center;
 }
 
 #back-btn {
     align-self: flex-start;
     height: 15vh;
     width: 15vh;
+    margin-left: 40px;
 }
 
 #vl {
-  border-left: 1px solid green;
-  height: 60vh;
+  border-left: 2px solid rgba(0,0,0,0.5);
+  height: 80vh;
   position: absolute;
   left: 50%;
   top: 50%;
-  margin-top: -30vh;
+  margin-top: -40vh;
+}
+
+.finish-heading {
+    font-size: 45px;
+    letter-spacing: 30px;
+}
+
+#name-input{
+    margin: 5px;
+    font-size: 25px;
+    width: 15em;
+    height: 2em;
+    border-radius: 10px;
+    border: 2px solid gray;
+    background-color: rgb(255 248 238);
 }
 
 #getit-flex {
     display: flex;
     flex-direction: row;
-    justify-content: space-around;
-    align-items: center;
-
+    justify-content: space-evenly;
+    align-items: stretch;
+    align-self: stretch;
 }
 
 /* style split buttons */
 
+.split-btn {
+    font-size: 25px;
+    font-weight: bold;
+    color: white;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    border-radius: 10px;
+    box-shadow: 2px 2px 5px rgb(0,0,0,0.3);
+    padding: 10px;
+}
+
 .vl-btn {
-  border-left: 1px solid green;
-  height: 80%;
+  border-left: 2px solid white;
+  height: 60%;
+  margin: 0 10px 0 10px;
 }
 
 #save-grid, #download-grid, #robot-draw-grid,
@@ -483,15 +521,15 @@ textarea {
 .before-split-btn, .after-split-btn {
     grid-row: 1;
     grid-column: 1;
-    display-flex;
+    display: flex;
     flex-direction: row;
     justify-content: space-around;
     align-items: center;
 }
 
 .split-btn-icon {
-    height: 50px;
-    width: 50px;
+    height: 70px;
+    width: 70px;
 }
 
 .before-split-btn {
@@ -508,6 +546,13 @@ textarea {
 .split-btn-grid[data-state="before"] .after-split-btn,
 .split-btn-grid[data-state="after"] .before-split-btn {
     opacity: 0;
+}
+
+.split-btn-grid[data-state="before"] #save-btn {
+    background-color: red;
+}
+.split-btn-grid[data-state="after"] #saved-btn {
+    background-color: green;
 }
 
 
@@ -758,15 +803,7 @@ main {
 }
 
 
-input{
-    margin: 5px;
-    font-size: 17px;
-    width: 15em;
-    height: 2em;
-    border-radius: 4px;
-    border: none;
-    background-color: rgb(252,238,219);
-}
+
 
 #designName_input{
     font-size: 17px;

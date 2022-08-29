@@ -120,42 +120,42 @@ const robodraw_url = "{% url 'draw:robodraw' %}"
         <div id="vl"></div>
 
         <div id="right-finish-pane">
-            <div id="nameit">NAME IT</div>
+            <div id="nameit" class="finish-heading">NAME IT</div>
             <input type="text" id="name-input" pattern="" name="title-input" placeholder="BeautifulDrawing" oninput="updateNameWarning(event, {{ all_designnames|safe }}); updateTitle(event);">
             <p id="name-warning">min 4 letters</p>
-            <div id="saveit">SAVE IT</div>
-            <div id="save-grid" class="split-btn-grid" data-state="before">
-                <div id="save-btn" class="before-split-btn" onclick="event.currentTarget.parentElement.data-state='after'; saveNamedDesign(event)">
+            <div id="saveit" class="finish-heading">SAVE IT</div>
+            <div id="save-grid" class="split-btn-grid" data-state="before" onclick="saveNamedDesign(event)">
+                <div id="save-btn" class="before-split-btn split-btn">
                     <img class="split-btn-icon" src="{% static 'imgs/save.svg' %}">
                     <div class="vl-btn"></div>
                     <div>SAVE</div>
                 </div>
-                <div id="saved-btn" class="after-split-btn">
+                <div id="saved-btn" class="after-split-btn split-btn">
                     <img class="split-btn-icon" src="{% static 'imgs/saved.svg' %}">
                     <div class="vl-btn"></div>
                     <div>SAVED</div>
                 </div>
             </div>
-            <div id="getit">GET IT</div>
+            <div id="getit" class="finish-heading">GET IT</div>
             <div id="getit-flex">
-                <div id="download-grid" class="split-btn-grid" data-state="before">
-                    <div id="download-btn" class="before-split-btn" onclick="event.currentTarget.parentElement.data-state='after'; downloadNamedDesign(event)">
+                <div id="download-grid" class="split-btn-grid" data-state="before" onclick="downloadNamedDesign(event)">
+                    <div id="download-btn" class="before-split-btn split-btn">
                         <img class="split-btn-icon" src="{% static 'imgs/download.svg' %}">
                         <div class="vl-btn"></div>
                         <div>DOWNLOAD</div>
                     </div>
-                    <div id="download-again-btn" class="after-split-btn" onclick="downloadNamedDesign(event)">
+                    <div id="download-again-btn" class="after-split-btn split-btn">
                         <img class="split-btn-icon" src="{% static 'imgs/download_again.svg' %}">
                         <div class="vl-btn"></div>
-                        <div>DOWNLOAD AGAIN</div>
+                        <div>DOWNLOAD<br>AGAIN</div>
                     </div>
                 </div>
-                <div id="robot-draw-grid" class="split-btn-grid" data-state="before">
-                    <div id="robot-draw-btn" class="before-split-btn" onclick="event.currentTarget.parentElement.data-state='after'; sendDesignToRobot(event)">
-                        <div>LET SCRIBUS DRAW</div>
+                <div id="robot-draw-grid" class="split-btn-grid" data-state="before" onclick="sendDesignToRobot(event)">
+                    <div id="robot-draw-btn" class="before-split-btn split-btn">
+                        <div>SCRIBUS DRAW</div>
                     </div>
-                    <div id="robot-draw-again-btn" class="after-split-btn" onclick="sendDesignToRobot(event)">
-                        <div id="sent-count">1x</div>
+                    <div id="robot-draw-again-btn" class="after-split-btn split-btn">
+                        <div id="sent-count" style="font-size:60px;">1x</div>
                         <div class="vl-btn"></div>
                         <div>+1 DRAWING</div>
                     </div>

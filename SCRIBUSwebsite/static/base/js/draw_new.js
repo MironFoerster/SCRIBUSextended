@@ -459,64 +459,54 @@ const saveNamedDesign = (evt) => {
     let nameWarning = document.getElementById('name-warning');
     let saveValid = true;
     let name;
-    if (document.getElementById("save-grid").dataset.state == "after")
-    {let save = true} else {let save = false}
 
     if (nameWarning.innerHTML == "") {
-        // Übernimmt den Namen aus dem Inputfeld
-        name = nameInput.value;
-        nameInput.setAttribute("disabled", "disabled");
-    } else {
-        // Definiert den save als inkorrekt
-        saveValid = false;
-    }
+        if (document.getElementById("save-grid").dataset.state == "before") {
+            // Übernimmt den Namen aus dem Inputfeld
+            name = nameInput.value;
+            nameInput.setAttribute("disabled", "disabled");
+            // Sendet Name und elements_list an den Server
+            fetch(window.location.origin + save_url, {
+                method : "POST",
+                headers : {
+                    "X-CSRFToken": getCookie('csrftoken'),
+                    "ContentType" : "application/json"},
+                body : JSON.stringify({
+                    "name": name,
+                    "elements": {"elements": global.elements},
+                    })
+                }
+            ).then(response => response.json())
+            .then(saveData => console.log("saved"));
 
-    // Wenn der save korrekt ist:
-    if (saveValid) {
-        // Sendet Name, elements_list und Speicheroption an den Server
-        fetch(window.location.origin + save_url, {
-            method : "POST",
-            headers : {
-                "X-CSRFToken": getCookie('csrftoken'),
-                "ContentType" : "application/json"},
-            body : JSON.stringify({
-                "name": name,
-                "elements": {"elements": global.elements},
-                })
-            }
-        ).then(response => response.json())
-        .then(saveData => console.log("saved"))
-    // Wenn der Submit inkorrekt ist:
+            evt.currentTarget.dataset.state='after';
+        }
     } else {
-        document.getElementById('save-grid').dataset.state='before';
-        // Fokussiert den Namensinput
         nameInput.focus()
     }
 }
 
 const downloadNamedDesign = (evt) => {
+    evt.currentTarget.dataset.state='after'
     let nameInput = document.getElementById('name-input');
-    if (document.getElementById('save-grid').dataset.state == 'after') {
-        //download
-        // get canvas data
-        var image = document.getElementById('finish-cvs').toDataURL();
+    //download
+    // get canvas data
+    var image = document.getElementById('finish-cvs').toDataURL();
 
-        // create temporary link
-        var tmpLink = document.createElement('a');
-        tmpLink.download = nameInput.value + '.png';
-        tmpLink.href = image;
+    // create temporary link
+    var tmpLink = document.createElement('a');
+    tmpLink.download = nameInput.value + '.png';
+    tmpLink.href = image;
 
-        // temporarily add link to body and initiate the download
-        document.body.appendChild(tmpLink);
-        tmpLink.click();
-        document.body.removeChild(tmpLink);
-    } else {
-        evt.currentTarget.parentElement.dataset.state='before';
-    }
+    // temporarily add link to body and initiate the download
+    document.body.appendChild(tmpLink);
+    tmpLink.click();
+    document.body.removeChild(tmpLink);
 }
 
 // Grafik an den Roboter senden...
 const sendDesignToRobot = (evt) => {
+    event.currentTarget.dataset.state='after';
     global.sentCounter += 1;
     document.getElementById('sent-count').innerHTML = global.sentCounter + "x";
     // Sendet elements_list an den Server
