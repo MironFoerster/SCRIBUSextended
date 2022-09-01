@@ -10,8 +10,8 @@ let global = {
     'prevPosOnCvs': undefined,
     'touchHasNotMoved': undefined,
     'sentCounter': 0,
-    'shapes': [],
-    'designs': [],
+    'shapes': {},
+    'designs': {},
     'words': [],
     'std_line_height': 15,
     'word_lens': [],
@@ -24,12 +24,20 @@ let global = {
 class pathElement {
     // Für das Erstellen eines p.E. wird benötigt: der Pfad
     // und der Koordinatenursprung zu dem der Pfad relativ ist
-    constructor(path=[[[0, 0]]], origin={'x': 0, 'y': 0}, translate='path_to_origin') {
+    constructor(path=[[[0, 0]]], origin={'x': 500, 'y': 500}, rotation=0, scale=1, smooth=0, translate='path_to_origin') {
         this.path = path; // Struktur des Pfads: [  [[x, y], [x, y], [x, y]], [[x, y], [x, y], [x, y]]  ]
         this.origin = {'x': undefined, 'y': undefined};
-        this.rotation = 0;
-        this.scale = 1;
-        this.smooth = 0;
+        this.rotation = rotation;
+        this.scale = scale;
+        this.smooth = smooth;
+
+        // Dupliziert den Punkt von Teilpfaden mit nur einem Punkt,
+        // damit 2 verbindendbare Punkte vorhanden sind, da sonst kein Zeichnen möglich
+        for (let partpath of this.path) {
+            if (partpath.length == 1) {
+                partpath.push(partpath[0]);
+            }
+        }
 
         this.min = {'x': Infinity, 'y': Infinity}
         this.max = {'x': -Infinity, 'y': -Infinity}
@@ -115,7 +123,7 @@ const manageDrawCtrl = (evt) => {
         case "ok":
             switch (true) {
                 case document.getElementById("pointer").checked:
-                    p = createPopup("Are you done Drawing?", ["NO, take me back", "YES, lets move on"], [";", "console.log('draw');drawCvs('finish-cvs', global.elements, controls=false); document.getElementById('main-grid').dataset.state='finish_sub';"]);
+                    p = createPopup("Are you done Drawing?", ["NO, take me back", "YES, lets move on"], [";", "drawCvs('finish-cvs', global.elements, controls=false); document.getElementById('main-grid').dataset.state='finish_sub';"]);
                     break;
                 case document.getElementById("pen").checked:
                     okPen();
@@ -182,7 +190,7 @@ const okGallery = () => {
     for (design of originalDesigns) {
         let designObject = global.designs[design.dataset.name]
         for (element of designObject) {
-            global.elements.push(new pathElement(element.path, origin=element.origin));
+            global.elements.push(new pathElement(element.path, element.origin));
         }
     }
 
@@ -198,11 +206,11 @@ const okGallery = () => {
 
 const toggleDesign = (evt) => {
     if (evt.currentTarget.dataset.state == "default") {
-        evt.currentTarget.dataset.state == "grouped";
+        evt.currentTarget.dataset.state = "grouped";
     } else if (evt.currentTarget.dataset.state == "grouped") {
-        evt.currentTarget.dataset.state == "original";
+        evt.currentTarget.dataset.state = "original";
     } else {
-        evt.currentTarget.dataset.state == "default";
+        evt.currentTarget.dataset.state = "default";
     }
 }
 
@@ -314,9 +322,9 @@ const okScribe = () => {
 
 const toggleShape = (evt) => {
     if (evt.currentTarget.dataset.state == "default") {
-        evt.currentTarget.dataset.state == "selected";
+        evt.currentTarget.dataset.state = "selected";
     } else {
-        evt.currentTarget.dataset.state == "default";
+        evt.currentTarget.dataset.state = "default";
     }
 }
 
@@ -324,7 +332,7 @@ const okShapes = () => {
     // Bekommt alle aktiven Formen (normalerweise ist das nur eine oder keine)
     let selectedShapes = document.querySelectorAll('.shape-card-cvs[data-state="selected"]');
     for (shape of selectedShapes) {
-        global.elements.push(new pathElement(shapes[shape.dataset.name].path));
+        global.elements.push(global.shapes[shape.dataset.name][0]);
     }
     // definiert das letzte zugefügte Element als fokussiertes Element
     global.focusedEl = global.elements[global.elements.length - 1];
@@ -345,17 +353,8 @@ const startPen = () => {
 }
 
 const okPen = () => {
-    // Dupliziert den Punkt von Teilpfaden mit nur einem Punkt,
-    // damit 2 verbindendbare Punkte vorhanden sind, da sonst kein Zeichnen möglich
-    // TODO: should be reevaluated
-    for (let partpath of global.drawnEl.path) {
-        if (partpath.length == 1) {
-            partpath.push(partpath[0]);
-        }
-    }
-
     // creating a new element from the path to shift the origin to the center
-    global.elements.push(new pathElement(global.drawnEl.path, global.drawnEl.origin, translate="origin_to_path"));
+    global.elements.push(new pathElement(global.drawnEl.path, global.drawnEl.origin, undefined, undefined, 1, translate="origin_to_path"));
 
     // no element is drawn now
     global.drawnEl = undefined;
@@ -441,7 +440,6 @@ const updateNameWarning = (evt, all_names) => {
         warning.innerHTML = "Name must not contain special characters or whitespaces!";
     // Wenn Name schon vergeben
     } else if (all_names.indexOf(evt.target.value)>-1) {
-        console.log(all_names.indexOf(evt.target.value));
         warning.innerHTML = "This name already exists!";
     // Wenn Name OK
     } else {
@@ -533,7 +531,6 @@ const resetOnLeave = () => {
 const Tstart = (evt) => {
     // Verhindert, dass das Touchevent anders als hier definiert Wirkung zeigt (z.B. scrollen)
     evt.preventDefault();
-    console.log("tstart");
 
     // Bekommt Liste von Touch-Objekten, die durch aktuelles Touch-Event verändert wurden
     // (normalerweise nur ein Touch-Objekt)
@@ -549,8 +546,6 @@ const Tstart = (evt) => {
 
     // Wenn Freihandzeihnen aktiv:
     if (document.getElementById('pen').checked) {
-        console.log("freehand");
-        console.log(global.drawnEl);
         // Wenn Zeichnung noch nicht begonnen:
         if (global.drawnEl == undefined) {
             // Fügt ein neues Element zur elements_list hinzu
@@ -879,10 +874,10 @@ const getPointOnEl = (pointOnCvs, element) => {
 }
 
 const middle = (a, b) => {
-    return [int((a[0]+b[0])/2), int((a[1]+b[1])/2)];
+    return [Math.round((a[0]+b[0])/2), Math.round((a[1]+b[1])/2)];
 }
 const percent_between = (p, a, b) => {
-    return [a[0]+int((a[0]-b[0])*p), a[1]+int((a[1]-b[1])*p)];
+    return [a[0]+Math.round((a[0]-b[0])*p), a[1]+Math.round((a[1]-b[1])*p)];
 }
 
 //Function that draws a canvas
@@ -922,7 +917,7 @@ const drawCvs = (id, elements, controls=true) => {
                     ctx.lineTo(point[0], point[1]);
                 }
             } else if (el.smooth == 1) {  // vollständige Abrundung
-                if (partpath[0] == partpath[-1]) {
+                if (JSON.stringify(partpath[0]) === JSON.stringify(partpath[partpath.length-1])) {
                     ctx.moveTo(...middle(partpath[0], partpath[1]));
                 } else {
                     ctx.lineTo(...middle(partpath[0], partpath[1]));
@@ -934,13 +929,13 @@ const drawCvs = (id, elements, controls=true) => {
 
                     ctx.quadraticCurveTo(...ctrl_point, ...middle(ctrl_point, next_point));
                 }
-                if (partpath[0] == partpath[-1]) {
+                if (JSON.stringify(partpath[0]) === JSON.stringify(partpath[partpath.length-1])) {
                     ctx.quadraticCurveTo(...partpath[0], ...middle(partpath[0], partpath[1]));
                 } else {
-                    ctx.lineTo(...partpath[-1]);
+                    ctx.lineTo(...partpath[partpath.length-1]);
                 }
             } else {  // teilweise Abrundung
-                if (partpath[0] == partpath[-1]) {
+                if (JSON.stringify(partpath[0]) === JSON.stringify(partpath[partpath.length-1])) {
                     ctx.moveTo(...percent_between(0.5 + (1 - el.smooth) / 2, partpath[0], partpath[1]));
                 } else {
                     ctx.lineTo(...percent_between(0.5 + (1 - el.smooth) / 2, partpath[0], partpath[1]));
@@ -953,12 +948,12 @@ const drawCvs = (id, elements, controls=true) => {
                     ctx.quadraticCurveTo(...ctrl_point, ...percent_between(el.smooth/2, ctrl_point, next_point));
                     ctx.lineTo(...percent_between((1-el.smooth)/(1-el.smooth/2), percent_between(el.smooth/2, ctrl_point, next_point), next_point));
                 }
-                ctx.lineTo(...partpath[-1]);
-                if (partpath[0] == partpath[-1]) {
+                ctx.lineTo(...partpath[partpath.length-1]);
+                if (JSON.stringify(partpath[0]) === JSON.stringify(partpath[partpath.length-1])) {
                     ctx.quadraticCurveTo(...partpath[0], ...percent_between(el.smooth/2, partpath[0], partpath[1]));
                     ctx.lineTo(...percent_between((1 - el.smooth) / (1 - el.smooth / 2), percent_between(el.smooth/2, partpath[0], partpath[1]), partpath[1]));
                 } else {
-                    ctx.lineTo(...partpath[-1])
+                    ctx.lineTo(...partpath[partpath.length-1])
                 }
             }
         }

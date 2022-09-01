@@ -12,9 +12,10 @@ from django.core.cache import cache
 import os
 
 def index(request):
-    context = {'all_shapes': Shape.objects.all(),
-               'all_designs': Design.objects.all(),
-               'all_designnames': list(Design.objects.values_list("name", flat=True))}
+    context = {'shapes': Shape.objects.all(),
+               'designs': Design.objects.all(),
+               'designnames': list(Design.objects.values_list("name", flat=True))}
+    print(context["shapes"])
     return render(request, 'draw/index.html', context)
 
 

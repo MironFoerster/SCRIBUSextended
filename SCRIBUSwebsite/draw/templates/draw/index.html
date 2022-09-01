@@ -55,8 +55,11 @@ const robodraw_url = "{% url 'draw:robodraw' %}"
                 <div class="shadowbox"></div>
                 <div id="shapes-scrollbox" class="scrollbox">
                     {% for shape in shapes.all %}
-                        <script>global.shapes.push({'{{ shape.name }}': {{ shape.elements.elements|safe }}})</script>
-                        <canvas id="{{ shape.name }}-shape" class="card-cvs shape-card-cvs" width=1000 height=1000 data-name="{{ shape.name }}" data-state="default" onload="drawCvs('{{ shape.name }}', global.shapes['{{ shape.name }}'], controls=false)" onclick="toggleShape(event)"></canvas>
+                        <canvas id="{{ shape.name }}-shape" class="card-cvs shape-card-cvs" width=1000 height=1000 data-name="{{ shape.name }}" data-state="default" onclick="toggleShape(event)"></canvas>
+                        <script>
+                            global.shapes['{{ shape.name }}'] = [new pathElement({{ shape.path|safe }}, undefined, undefined, 4, 1)];
+                            drawCvs('{{ shape.name }}-shape', global.shapes['{{ shape.name }}'], controls=false);
+                        </script>
                     {% endfor %}
                 </div>
             </div>
@@ -70,11 +73,17 @@ const robodraw_url = "{% url 'draw:robodraw' %}"
                 <div class="shadowbox"></div>
                 <div id="gallery-scrollbox" class="scrollbox">
                     {% for design in designs.all %}
-                        <script>global.designs.push({'{{ design.name }}': {{ design.elements.elements|safe }}})</script>
-                        <div id="card-layer-grid">
-                            <canvas id="{{ design.name }}-design" class="card-cvs design-card-cvs" width=1000 height=1000 data-name="{{ design.name }}" data-state="default" onload="drawCvs('{{ design.name }}', global.designs['{{ design.name }}'], controls=false)" onclick="toggleDesign(event)"></canvas>
-                            <div id="card-overlay" data-state="off">{{ design.name }}</div>
+                        <div class="card-layer-grid">
+                            <canvas id="{{ design.name }}-design" class="card-cvs design-card-cvs" width=1000 height=1000 data-name="{{ design.name }}" data-state="default" onclick="toggleDesign(event)"></canvas>
+                            <div class="card-overlay" data-state="off">{{ design.name }}</div>
                         </div>
+                        <script>
+                            global.designs['{{ design.name }}'] = {{ design.elements|safe }}.map(function (el) {
+                                return new pathElement(el.path, el.origin, el.rotation, el.scale, el.smooth);
+                            });
+                            drawCvs('{{ design.name }}-design', global.designs['{{ design.name }}'], controls=false);
+                        </script>
+
                     {% endfor %}
                 </div>
             </div>
@@ -94,17 +103,17 @@ const robodraw_url = "{% url 'draw:robodraw' %}"
                 <img class="icon" src="{% static 'imgs/pointer.svg' %}">
                 <img class="icon-checked" src="{% static 'imgs/pointer_checked.svg' %}">
             </label>
+            <div id="okcancel-wrap">
+                <div id="cancel" class="draw-okcancel-btn" onclick="manageDrawCtrl(event)" data-state="default">
+                    <img class="icon" src="{% static 'imgs/cancel.svg' %}">
+                    <img class="icon-checked" src="{% static 'imgs/cancel_checked.svg' %}">
+                </div>
 
-            <div id="cancel" class="draw-okcancel-btn" onclick="manageDrawCtrl(event)" data-state="default">
-                <img class="icon" src="{% static 'imgs/cancel.svg' %}">
-                <img class="icon-checked" src="{% static 'imgs/cancel_checked.svg' %}">
+                <div id="ok" class="draw-okcancel-btn" onclick="manageDrawCtrl(event)" data-state="default">
+                    <img class="icon" src="{% static 'imgs/ok.svg' %}">
+                    <img class="icon-checked" src="{% static 'imgs/ok_checked.svg' %}">
+                </div>
             </div>
-
-            <div id="ok" class="draw-okcancel-btn" onclick="manageDrawCtrl(event)" data-state="default">
-                <img class="icon" src="{% static 'imgs/ok.svg' %}">
-                <img class="icon-checked" src="{% static 'imgs/ok_checked.svg' %}">
-            </div>
-
         </div>
 
     </div>
