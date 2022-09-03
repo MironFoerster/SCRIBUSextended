@@ -57,7 +57,7 @@ const robodraw_url = "{% url 'draw:robodraw' %}"
                     {% for shape in shapes.all %}
                         <canvas id="{{ shape.name }}-shape" class="card-cvs shape-card-cvs" width=1000 height=1000 data-name="{{ shape.name }}" data-state="default" onclick="toggleShape(event)"></canvas>
                         <script>
-                            global.shapes['{{ shape.name }}'] = [new pathElement({{ shape.path|safe }}, undefined, undefined, 4, 1)];
+                            global.shapes['{{ shape.name }}'] = [new pathElement({{ shape.path|safe }}, undefined, undefined, 1, 0)];
                             drawCvs('{{ shape.name }}-shape', global.shapes['{{ shape.name }}'], controls=false);
                         </script>
                     {% endfor %}
@@ -103,17 +103,26 @@ const robodraw_url = "{% url 'draw:robodraw' %}"
                 <img class="icon" src="{% static 'imgs/pointer.svg' %}">
                 <img class="icon-checked" src="{% static 'imgs/pointer_checked.svg' %}">
             </label>
-            <div id="okcancel-wrap">
-                <div id="cancel" class="draw-okcancel-btn" onclick="manageDrawCtrl(event)" data-state="default">
-                    <img class="icon" src="{% static 'imgs/cancel.svg' %}">
-                    <img class="icon-checked" src="{% static 'imgs/cancel_checked.svg' %}">
-                </div>
+            <div id="okcancel-grid">
+                <div id="okcancel-wrap">
+                    <div id="cancel" class="draw-okcancel-btn" onclick="manageDrawCtrl(event)" data-state="default">
+                        <img class="icon" src="{% static 'imgs/cancel.svg' %}">
+                        <img class="icon-checked" src="{% static 'imgs/cancel_checked.svg' %}">
+                    </div>
 
-                <div id="ok" class="draw-okcancel-btn" onclick="manageDrawCtrl(event)" data-state="default">
-                    <img class="icon" src="{% static 'imgs/ok.svg' %}">
-                    <img class="icon-checked" src="{% static 'imgs/ok_checked.svg' %}">
+                    <div id="ok" class="draw-okcancel-btn" onclick="manageDrawCtrl(event)" data-state="default">
+                        <img class="icon" src="{% static 'imgs/ok.svg' %}">
+                        <img class="icon-checked" src="{% static 'imgs/ok_checked.svg' %}">
+                    </div>
                 </div>
             </div>
+
+        </div>
+        <div id="smoother" data-state="off" onclick="event.stopPropagation(); event.currentTarget.dataset.state = 'slider'; document.getElementById('smooth-range').value = global.focusedEl.smooth;">
+            <img id="icon-smooth" src="{% static 'imgs/smooth.svg' %}">
+            <img id="icon-full-sm" src="{% static 'imgs/full_sm.svg' %}">
+            <input type="range" id="smooth-range" min="0" max="1" step="0.01" onclick="event.stopPropagation();" oninput="updateSmoothness(event)" onchange="document.getElementById('smoother').dataset.state='button';">
+            <img id="icon-no-sm" src="{% static 'imgs/no_sm.svg' %}">
         </div>
 
     </div>
@@ -130,7 +139,7 @@ const robodraw_url = "{% url 'draw:robodraw' %}"
 
         <div id="right-finish-pane">
             <div id="nameit" class="finish-heading">NAME IT</div>
-            <input type="text" id="name-input" pattern="" name="title-input" placeholder="BeautifulDrawing" oninput="updateNameWarning(event, {{ all_designnames|safe }}); updateTitle(event);">
+            <input type="text" id="name-input" pattern="" name="title-input" placeholder="BeautifulDrawing" oninput="updateNameWarning(event, {{ designnames|safe }}); updateTitle(event);">
             <p id="name-warning">min 4 letters</p>
             <div id="saveit" class="finish-heading">SAVE IT</div>
             <div id="save-grid" class="split-btn-grid" data-state="before" onclick="saveNamedDesign(event)">

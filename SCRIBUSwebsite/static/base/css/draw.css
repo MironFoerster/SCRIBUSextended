@@ -10,6 +10,7 @@
     --lightpurple: #9E5ECE;
     --gray: #888888;
     --lightgray: #222222;
+    --pink: #EE00D7;
 }
 
 * {
@@ -136,38 +137,137 @@ body {
 /* DRAW-CONTROL MECHANISM */
 
 /* default styling */
+
+#okcancel-grid {
+    display: grid;
+    flex-basis: 0;
+    flex-grow: 1;
+}
+
 #okcancel-wrap {
-    align-self: flex-end;
+    grid-column: 1;
+    grid-row: 1;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    flex-basis: 0;
-    flex-grow: 1;
 }
-.draw-okcancel-btn {
+
+#smoother {
+    position: absolute;
+    bottom: 2vh;
+    right: 15px;
     width: calc((100vw - 96vh) / 2 - 30px);
-    border: 3px solid white;
+    height: 31vh;
+    border-radius: 35px;
+    background-color: var(--pink);
+    border: 3px solid var(--pink);
+    opacity: 1;
+    z-index: 3;
+    transition: background-color 0.5s ease, opacity 0.5s ease, height 0.5s ease;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    align-items: center;
+}
+#smoother[data-state="off"] {
+    opacity: 0;
+    pointer-events: none;
+}
+#smoother[data-state="button"] {
+}
+#smoother[data-state="slider"] {
+    background-color: white;
+    height: 96vh;
+    justify-content: space-between;
+}
+
+#smoother[data-state="slider"] #icon-full-sm,
+#smoother[data-state="slider"] #icon-no-sm,
+#icon-smooth {
+    position: absolute;
+    opacity: 1;
+    width: min(calc((100vw - 96vh) / 2 - 30px - 30px), calc(96vh / 3 - 30px));
+    height: min(calc((100vw - 96vh) / 2 - 30px - 30px), calc(96vh / 3 - 30px));
+    transition: opacity 0.5s ease;
+}
+
+#icon-full-sm,
+#icon-no-sm,
+#smoother[data-state="slider"] #icon-smooth {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+    transition: opacity 0.5s ease;
+}
+
+#icon-full-sm {
+    top: 0;
+}
+
+#icon-no-sm {
+    bottom: 0;
+}
+
+#icon-smooth {
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+
+#smooth-range {
+    position: absolute;
+    top: 50%;
+    pointer-events: none;
+    -webkit-appearance: none;
+    transform: translateY(-50%) rotate(90deg);
+    height: 40px;
+    width: 0vh;
+    transition: width 0.5s ease, opacity 0.5s ease;
+    opacity: 0;
+    border-radius: 20px;
+}
+
+#smoother[data-state="slider"] #smooth-range {
+    pointer-events: auto;
+    width: 55vh;
+    opacity: 1;
+}
+
+#smooth-range::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    height: 40px;
+    width: 40px;
+    border-radius: 20px;
+    background: #EE00D7;
+}
+#smooth-range::-webkit-slider-runnable-track {
+    width: 40px;
+    cursor: pointer;
+    animate: 0.2s;
+    box-shadow: 0px 0px 0px #000000;
+    background: #FCA2F0;
+    border-radius: 20px;
+    border: 0px solid #000000;
+}
+.draw-ctrl-btn, .draw-okcancel-btn {
+    width: calc((100vw - 96vh) / 2 - 30px);
     border-radius: 35px;
     background-color: white;
     flex-basis: 0;
     flex-grow: 1;
     position: relative;
     display: grid;
-    transition: width 0.5s;
+    transition: width 0.5s, background-color 0.5s;
     z-index: 0;
 }
 
+.draw-okcancel-btn {
+    border: 3px solid white;
+}
+
 .draw-ctrl-btn {
-    width: calc((100vw - 96vh) / 2 - 30px);
     border: 3px solid;
-    border-radius: 35px;
-    background-color: white;
-    flex-basis: 0;
-    flex-grow: 1;
-    position: relative;
-    display: grid;
-    transition: width 0.5s;
-    z-index: 0;
 }
 
 #scribe + .draw-ctrl-btn {
@@ -191,6 +291,10 @@ body {
 }
 
 /* checked styling */
+
+#smooth-btn[data="active"] {
+    opacity: 1;
+}
 
 .draw-okcancel-btn[checked] {
     border: 2px solid white;

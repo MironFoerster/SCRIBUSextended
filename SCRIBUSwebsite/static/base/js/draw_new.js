@@ -84,10 +84,50 @@ class pathElement {
         } else if (translate == 'path_to_origin') {
             this.origin = origin;
         }
+
+        // increase resolution
+        console.log(this.min);
+        let factor = 10
+        this.scale /= factor;
+        this.min.x *= factor;
+        this.min.y *= factor;
+        this.max.x *= factor;
+        this.max.y *= factor;
+                console.log(this.min);
+
+        for (let partpath of this.path) {
+            for (let point of partpath) {
+                point[0] *= factor;
+                point[1] *= factor;
+            }
+        }
     }
 }
 
 // Um ein neues Element zur elements_list hinzuzufügen: global.elements.push(new pathElement(path, origin));
+
+
+const cancelGeneral = () => {
+    // cancel scribe
+    // cancel shapes
+    // cancel gallery
+    // cancel pen
+    if (global.drawnEl != undefined){
+        // remove last element (which is drawnEl)
+        global.elements.pop();
+        // no element is drawn now
+        global.drawnEl = undefined;
+    }
+
+    // cancel active
+    if (global.activeEl != undefined){
+        global.activeEl = undefined;
+        document.getElementById("smoother").dataset.state = "off";
+    }
+
+    // draw canvas
+    drawCvs("main-cvs", global.elements);
+}
 
 // Definiert Funktionen, die bei Buttonclicks ausgeführt werden sollen
 
@@ -184,11 +224,11 @@ const okGallery = () => {
     let originalDesigns = document.querySelectorAll('.design-card-cvs[data-state="original"]');
 
     for (design of groupedDesigns) {
-        let groupedPath = groupElements(global.designs[design.dataset.name]);
+        let groupedPath = groupElements(JSON.parse(JSON.stringify(global.designs[design.dataset.name])));
         global.elements.push(new pathElement(groupedPath));
     }
     for (design of originalDesigns) {
-        let designObject = global.designs[design.dataset.name]
+        let designObject = JSON.parse(JSON.stringify(global.designs[design.dataset.name]));
         for (element of designObject) {
             global.elements.push(new pathElement(element.path, element.origin));
         }
@@ -332,7 +372,7 @@ const okShapes = () => {
     // Bekommt alle aktiven Formen (normalerweise ist das nur eine oder keine)
     let selectedShapes = document.querySelectorAll('.shape-card-cvs[data-state="selected"]');
     for (shape of selectedShapes) {
-        global.elements.push(global.shapes[shape.dataset.name][0]);
+        global.elements.push(JSON.parse(JSON.stringify(global.shapes[shape.dataset.name][0])));
     }
     // definiert das letzte zugefügte Element als fokussiertes Element
     global.focusedEl = global.elements[global.elements.length - 1];
@@ -377,6 +417,12 @@ const cancelPen = () => {
         global.drawnEl = undefined;
     }
 
+    drawCvs("main-cvs", global.elements);
+}
+
+const updateSmoothness = (evt) => {
+    console.log(document.getElementById("smooth-range").value);
+    global.elements[global.elements.indexOf(global.focusedEl)].smooth = document.getElementById("smooth-range").value;
     drawCvs("main-cvs", global.elements);
 }
 
@@ -789,17 +835,22 @@ const Tend = (evt) => {
                     }
                 }
             }
-
+            console.log(closestEl);
             // Wenn das nächste Element einen kleineren Abstand als 30 Einheiten besitzt:
             if (closestEl.distance < 30) {
                 // Das nächste Element wird Fokussiert
                 global.focusedEl = closestEl.element;
+                document.getElementById("smoother").dataset.state = "button";
             // Wenn das nächste Element weiter entfernt ist:
             } else {
                 // Kein Element wird Fokussiert
                 global.focusedEl = undefined;
             }
         }
+    }
+
+    if (global.focusedEl == undefined) {
+        document.getElementById("smoother").dataset.state = "off";
     }
 
     // Aktualisiert die Zeichenfläche
@@ -877,7 +928,7 @@ const middle = (a, b) => {
     return [Math.round((a[0]+b[0])/2), Math.round((a[1]+b[1])/2)];
 }
 const percent_between = (p, a, b) => {
-    return [a[0]+Math.round((a[0]-b[0])*p), a[1]+Math.round((a[1]-b[1])*p)];
+    return [a[0]+Math.round((b[0]-a[0])*p), a[1]+Math.round((b[1]-a[1])*p)];
 }
 
 //Function that draws a canvas
@@ -905,8 +956,14 @@ const drawCvs = (id, elements, controls=true) => {
         if (el == global.drawnEl) {
             ctx.lineWidth = 5 / el.scale;
         } else {
-            ctx.lineWidth = 3 / el.scale;
+            let f = 3;
+            if (id != "main-cvs" && id != "finish-cvs") {
+                f = 12;
+            }
+            ctx.lineWidth = f / el.scale;
+
         }
+
 
         // draw the path
         for (let partpath of el.path) {
@@ -948,7 +1005,6 @@ const drawCvs = (id, elements, controls=true) => {
                     ctx.quadraticCurveTo(...ctrl_point, ...percent_between(el.smooth/2, ctrl_point, next_point));
                     ctx.lineTo(...percent_between((1-el.smooth)/(1-el.smooth/2), percent_between(el.smooth/2, ctrl_point, next_point), next_point));
                 }
-                ctx.lineTo(...partpath[partpath.length-1]);
                 if (JSON.stringify(partpath[0]) === JSON.stringify(partpath[partpath.length-1])) {
                     ctx.quadraticCurveTo(...partpath[0], ...percent_between(el.smooth/2, partpath[0], partpath[1]));
                     ctx.lineTo(...percent_between((1 - el.smooth) / (1 - el.smooth / 2), percent_between(el.smooth/2, partpath[0], partpath[1]), partpath[1]));
