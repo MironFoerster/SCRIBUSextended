@@ -86,14 +86,12 @@ class pathElement {
         }
 
         // increase resolution
-        console.log(this.min);
         let factor = 10
         this.scale /= factor;
         this.min.x *= factor;
         this.min.y *= factor;
         this.max.x *= factor;
         this.max.y *= factor;
-                console.log(this.min);
 
         for (let partpath of this.path) {
             for (let point of partpath) {
@@ -109,8 +107,21 @@ class pathElement {
 
 const cancelGeneral = () => {
     // cancel scribe
+    document.getElementById("scribe-text-input").value = "";
+    document.getElementById("ok").removeAttribute("disabled");
+
     // cancel shapes
+    cards = document.getElementsByClassName("shape-card-cvs");
+    for (card of cards) {
+        card.dataset.state = "default";
+    }
+
     // cancel gallery
+    cards = document.getElementsByClassName("design-card-cvs");
+    for (card of cards) {
+        card.dataset.state = "default";
+    }
+
     // cancel pen
     if (global.drawnEl != undefined){
         // remove last element (which is drawnEl)
@@ -119,9 +130,9 @@ const cancelGeneral = () => {
         global.drawnEl = undefined;
     }
 
-    // cancel active
-    if (global.activeEl != undefined){
-        global.activeEl = undefined;
+    // cancel focused
+    if (global.focusedEl != undefined){
+        global.focusedEl = undefined;
         document.getElementById("smoother").dataset.state = "off";
     }
 
@@ -130,91 +141,30 @@ const cancelGeneral = () => {
 }
 
 // Definiert Funktionen, die bei Buttonclicks ausgeführt werden sollen
-
-const manageDrawCtrl = (evt) => {
-    switch (evt.currentTarget.id) {
-        case "pointer":
-            radios = document.getElementsByName("draw_ctrl");
-            for (radio of radios) {
-                radio.removeAttribute("disabled");
-            }
-            break;
-        case "cancel":
-            switch (true) {
-                case document.getElementById("pointer").checked:
-                    p = createPopup("Do you want to back to MENU or just CLEAR what you have drawn?", ["CANCEL", "MENU", "CLEAR"], ["", "window.location.href = window.location.origin + menu_url;", "global.elements = []; drawCvs('main-cvs', global.elements);"]);
-                    break;
-                case document.getElementById("pen").checked:
-                    cancelPen();
-                case document.getElementById("scribe").checked:
-                    document.getElementById("ok").removeAttribute("disabled");
-                case document.getElementById("shapes").checked:
-                case document.getElementById("gallery").checked:
-                default:
-                    // reset to default view
-                    radios = document.getElementsByName("draw_ctrl");
-                    for (radio of radios) {
-                        radio.removeAttribute("disabled");
-                    }
-                    document.getElementById("pointer").checked = true;
-            }
-            break;
-
-        case "ok":
-            switch (true) {
-                case document.getElementById("pointer").checked:
-                    p = createPopup("Are you done Drawing?", ["NO, take me back", "YES, lets move on"], [";", "drawCvs('finish-cvs', global.elements, controls=false); document.getElementById('main-grid').dataset.state='finish_sub';"]);
-                    break;
-                case document.getElementById("pen").checked:
-                    okPen();
-                    break;
-                case document.getElementById("scribe").checked:
-                    okScribe();
-                    break;
-                case document.getElementById("shapes").checked:
-                    okShapes();
-                    break;
-                case document.getElementById("gallery").checked:
-                    okGallery();
-                    break;
-            }
-            if (!document.getElementById("pointer").checked) {
-                radios = document.getElementsByName("draw_ctrl");
-                for (radio of radios) {
-                    radio.removeAttribute("disabled");
-                }
-                document.getElementById("pointer").checked = true;
-            }
-            break;
-        case "pen":
-            startPen();
-            break;
-        case "scribe":
-            document.getElementById("scribe-text-input").innerHTML = "";
-            document.getElementById("ok").setAttribute("disabled", "disabled");
-            break;
-        case "shapes":
-            cards = document.getElementsByClassName("shape-card-cvs");
-            for (card of cards) {
-                card.dataset.state = "default";
-            }
-            break;
-        case "gallery":
-            cards = document.getElementsByClassName("design-card-cvs");
-            for (card of cards) {
-                card.dataset.state = "default";
-            }
-            break;
+const manageOk = () => {
+    if (document.getElementById("pointer").checked) {
+        let p = createPopup(["FINISH"], ["drawCvs('finish-cvs', global.elements, controls=false); document.getElementById('main-grid').dataset.state='finish_sub';"], ["green"]);
     }
-
-    if (!["pointer", "ok", "cancel"].includes(evt.currentTarget.id)) {
-        radios = document.getElementsByName("draw_ctrl");
-        for (radio of radios) {
-            radio.disabled = true;
-        }
+    if (document.getElementById("pen").checked) {
+        okPen();
     }
+    if (document.getElementById("scribe").checked) {
+        okScribe();
+    }
+    if (document.getElementById("shapes").checked) {
+        okShapes();
+    }
+    if (document.getElementById("gallery").checked) {
+        okGallery();
+    }
+    document.getElementById("pointer").checked = true;
 }
-
+const manageCancel = () => {
+    if (document.getElementById("pointer").checked) {
+        let p = createPopup(["MENU", "CLEAR"], ["window.location.href = window.location.origin + menu_url;", "global.elements = []; sessionStorage.setItem('elements', JSON.stringify(global.elements)); drawCvs('main-cvs', global.elements);"], ["blue", "red"]);
+    }
+    document.getElementById("pointer").checked = true;
+}
 
 // functions used by draw control
 
@@ -222,8 +172,11 @@ const okGallery = () => {
     // Bekommt alle aktiven Formen (normalerweise ist das nur eine oder keine)
     let groupedDesigns = document.querySelectorAll('.design-card-cvs[data-state="grouped"]');
     let originalDesigns = document.querySelectorAll('.design-card-cvs[data-state="original"]');
-
+    console.log(groupedDesigns);
+    console.log(originalDesigns);
+    console.log(global.elements);
     for (design of groupedDesigns) {
+        console.log(design.dataset.name);
         let groupedPath = groupElements(JSON.parse(JSON.stringify(global.designs[design.dataset.name])));
         global.elements.push(new pathElement(groupedPath));
     }
@@ -233,6 +186,8 @@ const okGallery = () => {
             global.elements.push(new pathElement(element.path, element.origin));
         }
     }
+        console.log(global.elements);
+
 
     // definiert das letzte zugefügte Element als fokussiertes Element
     global.focusedEl = global.elements[global.elements.length - 1];
@@ -369,9 +324,10 @@ const toggleShape = (evt) => {
 }
 
 const okShapes = () => {
+
     // Bekommt alle aktiven Formen (normalerweise ist das nur eine oder keine)
     let selectedShapes = document.querySelectorAll('.shape-card-cvs[data-state="selected"]');
-    for (shape of selectedShapes) {
+    for (let shape of selectedShapes) {
         global.elements.push(JSON.parse(JSON.stringify(global.shapes[shape.dataset.name][0])));
     }
     // definiert das letzte zugefügte Element als fokussiertes Element
@@ -408,20 +364,8 @@ const okPen = () => {
     // save elements in browser
     sessionStorage.setItem('elements', JSON.stringify(global.elements));
 }
-const cancelPen = () => {
-    // delete last element only if something is already drawn
-    if (global.drawnEl != undefined){
-        // remove last element (which is drawnEl)
-        global.elements.pop();
-        // no element is drawn now
-        global.drawnEl = undefined;
-    }
-
-    drawCvs("main-cvs", global.elements);
-}
 
 const updateSmoothness = (evt) => {
-    console.log(document.getElementById("smooth-range").value);
     global.elements[global.elements.indexOf(global.focusedEl)].smooth = document.getElementById("smooth-range").value;
     drawCvs("main-cvs", global.elements);
 }
@@ -429,33 +373,27 @@ const updateSmoothness = (evt) => {
 
 // Helperfunctions
 
-const createPopup = (message, buttons, onclicks) => {
-    p = document.createElement("div");
+const createPopup = (buttons, onclicks, colors) => {
+    let p = document.createElement("div");
     p.className = "popup-body";
-    p.setAttribute('onclick',"event.stopPropagation();event.currentTarget.remove();document.getElementById('pop-shader').remove();");
-    m = document.createElement("div");
-    m.className = "popup-message";
-    m.innerHTML = message;
-    c = document.createElement("div");
-    c.className = "popup-ctrl";
+    p.setAttribute('onclick',"event.stopPropagation();event.currentTarget.remove();document.getElementById('popup-cancel').remove();");
 
-    s = document.createElement("div");
-    s.id = "pop-shader";
-    s.setAttribute('onclick',"event.stopPropagation();")
 
     for (let i=0; i<buttons.length; i++) {
-        b = document.createElement("button");
+        let b = document.createElement("div");
         b.innerHTML = buttons[i];
         b.className = "popup-btn";
         b.setAttribute('onclick', onclicks[i]);
-        c.appendChild(b);
+        b.style.backgroundColor = colors[i];
+        p.appendChild(b);
     }
 
-    p.appendChild(m);
-    p.appendChild(c);
+    let c = document.createElement("div");
+    c.innerHTML = "tap anywhere to cancel";
+    c.id = "popup-cancel";
 
-    document.body.appendChild(s);
     document.body.appendChild(p);
+    document.body.appendChild(c);
     return p;
 }
 
@@ -517,7 +455,7 @@ const saveNamedDesign = (evt) => {
                     "ContentType" : "application/json"},
                 body : JSON.stringify({
                     "name": name,
-                    "elements": {"elements": global.elements},
+                    "elements": global.elements,
                     })
                 }
             ).then(response => response.json())
@@ -596,7 +534,7 @@ const Tstart = (evt) => {
         if (global.drawnEl == undefined) {
             // Fügt ein neues Element zur elements_list hinzu
             // ohne Pfad, mit Koordinatenursprung am aktuellen Touch
-            global.elements.push(new pathElement(undefined, {'x': global.posOnCvs.x, 'y': global.posOnCvs.y}));
+            global.elements.push(new pathElement(undefined, {'x': global.posOnCvs.x, 'y': global.posOnCvs.y}, 0, 10, 1));
             // Definiert das neu hinzugefügte Element als das, das gerade gezeichnet wird
             global.drawnEl = global.elements[global.elements.length - 1];
         }
@@ -835,7 +773,6 @@ const Tend = (evt) => {
                     }
                 }
             }
-            console.log(closestEl);
             // Wenn das nächste Element einen kleineren Abstand als 30 Einheiten besitzt:
             if (closestEl.distance < 30) {
                 // Das nächste Element wird Fokussiert

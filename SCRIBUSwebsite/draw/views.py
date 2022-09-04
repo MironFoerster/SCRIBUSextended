@@ -15,7 +15,6 @@ def index(request):
     context = {'shapes': Shape.objects.all(),
                'designs': Design.objects.all(),
                'designnames': list(Design.objects.values_list("name", flat=True))}
-    print(context["shapes"])
     return render(request, 'draw/index.html', context)
 
 

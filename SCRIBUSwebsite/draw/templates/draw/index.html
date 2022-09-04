@@ -19,7 +19,7 @@ const robodraw_url = "{% url 'draw:robodraw' %}"
 <div id="main-grid" data-state="draw_sub">
     <div id="draw-sub" class="subpage">
         <div id="left-ctrl-pane" class="draw-ctrl-pane">
-            <input type="radio" name="draw_ctrl" id="scribe" onchange="manageDrawCtrl(event)" value="scribe">
+            <input type="radio" name="draw_ctrl" id="scribe" onchange="cancelGeneral();" value="scribe">
             <label for="scribe" class="draw-ctrl-btn">
                 <img class="icon" src="{% static 'imgs/scribe.svg' %}">
                 <img class="icon-checked" src="{% static 'imgs/scribe_checked.svg' %}">
@@ -46,7 +46,7 @@ const robodraw_url = "{% url 'draw:robodraw' %}"
                 </div>
             </div>
 
-            <input type="radio" name="draw_ctrl" id="shapes" onchange="manageDrawCtrl(event)" value="shapes">
+            <input type="radio" name="draw_ctrl" id="shapes" onchange="cancelGeneral();" value="shapes">
             <label for="shapes" class="draw-ctrl-btn">
                 <img class="icon" src="{% static 'imgs/shapes.svg' %}">
                 <img class="icon-checked" src="{% static 'imgs/shapes_checked.svg' %}">
@@ -64,7 +64,7 @@ const robodraw_url = "{% url 'draw:robodraw' %}"
                 </div>
             </div>
 
-            <input type="radio" name="draw_ctrl" id="gallery" onchange="manageDrawCtrl(event)" value="gallery">
+            <input type="radio" name="draw_ctrl" id="gallery" onchange="cancelGeneral();" value="gallery">
             <label for="gallery" class="draw-ctrl-btn">
                 <img class="icon" src="{% static 'imgs/gallery.svg' %}">
                 <img class="icon-checked" src="{% static 'imgs/gallery_checked.svg' %}">
@@ -92,25 +92,25 @@ const robodraw_url = "{% url 'draw:robodraw' %}"
         <canvas id="main-cvs" width="1000" height="1000" ontouchstart="Tstart(event)" ontouchmove="Tmove(event)" ontouchend="Tend(event)"></canvas>
 
         <div id="right-ctrl-pane" class="draw-ctrl-pane">
-            <input type="radio" name="draw_ctrl" id="pen" onchange="manageDrawCtrl(event)" value="pen">
+            <input type="radio" name="draw_ctrl" id="pen" onchange="cancelGeneral(); startPen();" value="pen">
             <label for="pen" class="draw-ctrl-btn">
                 <img class="icon" src="{% static 'imgs/pen.svg' %}">
                 <img class="icon-checked" src="{% static 'imgs/pen_checked.svg' %}">
             </label>
 
-            <input type="radio" name="draw_ctrl" id="pointer" onchange="manageDrawCtrl(event)" value="pointer" checked>
+            <input type="radio" name="draw_ctrl" id="pointer" onchange="cancelGeneral();" value="pointer" checked>
             <label for="pointer" class="draw-ctrl-btn">
                 <img class="icon" src="{% static 'imgs/pointer.svg' %}">
                 <img class="icon-checked" src="{% static 'imgs/pointer_checked.svg' %}">
             </label>
             <div id="okcancel-grid">
                 <div id="okcancel-wrap">
-                    <div id="cancel" class="draw-okcancel-btn" onclick="manageDrawCtrl(event)" data-state="default">
+                    <div id="cancel" class="draw-okcancel-btn" onclick="cancelGeneral(); manageCancel();" data-state="default">
                         <img class="icon" src="{% static 'imgs/cancel.svg' %}">
                         <img class="icon-checked" src="{% static 'imgs/cancel_checked.svg' %}">
                     </div>
 
-                    <div id="ok" class="draw-okcancel-btn" onclick="manageDrawCtrl(event)" data-state="default">
+                    <div id="ok" class="draw-okcancel-btn" onclick="manageOk(); cancelGeneral();" data-state="default">
                         <img class="icon" src="{% static 'imgs/ok.svg' %}">
                         <img class="icon-checked" src="{% static 'imgs/ok_checked.svg' %}">
                     </div>
@@ -132,50 +132,50 @@ const robodraw_url = "{% url 'draw:robodraw' %}"
         <div id="left-finish-pane">
             <div id="draw-title">TITLE</div>
             <canvas id="finish-cvs" width=1000 height=1000></canvas>
-            <img id="back-btn" src="{% static 'imgs/back.svg' %}" onclick="createPopup('Do you want to go back to DRAW or straight back to MENU?', ['CANCEL', 'DRAW', 'MENU'], ['', 'resetOnLeave();document.getElementById(\'main-grid\').dataset.state=\'draw_sub\';', 'resetOnLeave();window.location.href = window.location.origin + menu_url'])">
+            <img id="back-btn" src="{% static 'imgs/back.svg' %}" onclick="createPopup(['DRAW', 'MENU'], ['resetOnLeave();document.getElementById(\'main-grid\').dataset.state=\'draw_sub\';', 'resetOnLeave();window.location.href = window.location.origin + menu_url'], ['blue', 'blue'])">
         </div>
 
         <div id="vl"></div>
 
         <div id="right-finish-pane">
-            <div id="nameit" class="finish-heading">NAME IT</div>
-            <input type="text" id="name-input" pattern="" name="title-input" placeholder="BeautifulDrawing" oninput="updateNameWarning(event, {{ designnames|safe }}); updateTitle(event);">
-            <p id="name-warning">min 4 letters</p>
-            <div id="saveit" class="finish-heading">SAVE IT</div>
-            <div id="save-grid" class="split-btn-grid" data-state="before" onclick="saveNamedDesign(event)">
-                <div id="save-btn" class="before-split-btn split-btn">
-                    <img class="split-btn-icon" src="{% static 'imgs/save.svg' %}">
-                    <div class="vl-btn"></div>
-                    <div>SAVE</div>
-                </div>
-                <div id="saved-btn" class="after-split-btn split-btn">
-                    <img class="split-btn-icon" src="{% static 'imgs/saved.svg' %}">
-                    <div class="vl-btn"></div>
-                    <div>SAVED</div>
+            <div class="finish-sect">
+                <div id="nameit" class="finish-heading">NAME IT</div>
+                <input type="text" id="name-input" pattern="" name="title-input" placeholder="BeautifulDrawing" oninput="updateNameWarning(event, {{ designnames|safe }}); updateTitle(event);">
+                <p id="name-warning">min 4 letters</p>
+            </div>
+            <div class="finish-sect">
+                <div id="saveit" class="finish-heading">SAVE IT</div>
+                <div id="save-grid" class="split-btn-grid" data-state="before" onclick="saveNamedDesign(event)">
+                    <div id="save-btn" class="before-split-btn split-btn">
+                        <img class="split-btn-icon" src="{% static 'imgs/save.svg' %}">
+                    </div>
+                    <div id="saved-btn" class="after-split-btn split-btn">
+                        <img class="split-btn-icon" src="{% static 'imgs/saved.svg' %}">
+                    </div>
                 </div>
             </div>
-            <div id="getit" class="finish-heading">GET IT</div>
-            <div id="getit-flex">
-                <div id="download-grid" class="split-btn-grid" data-state="before" onclick="downloadNamedDesign(event)">
-                    <div id="download-btn" class="before-split-btn split-btn">
-                        <img class="split-btn-icon" src="{% static 'imgs/download.svg' %}">
-                        <div class="vl-btn"></div>
-                        <div>DOWNLOAD</div>
+
+            <div class="finish-sect">
+                <div id="getit" class="finish-heading">GET IT</div>
+                <div id="getit-flex">
+                    <div id="download-grid" class="split-btn-grid" data-state="before" onclick="downloadNamedDesign(event)">
+                        <div id="download-btn" class="before-split-btn split-btn">
+                            <img class="split-btn-icon" src="{% static 'imgs/download.svg' %}">
+                            <div>DOWNLOAD</div>
+                        </div>
+                        <div id="download-again-btn" class="after-split-btn split-btn">
+                            <img class="split-btn-icon" src="{% static 'imgs/download_again.svg' %}">
+                            <div>DOWNLOAD<br>AGAIN</div>
+                        </div>
                     </div>
-                    <div id="download-again-btn" class="after-split-btn split-btn">
-                        <img class="split-btn-icon" src="{% static 'imgs/download_again.svg' %}">
-                        <div class="vl-btn"></div>
-                        <div>DOWNLOAD<br>AGAIN</div>
-                    </div>
-                </div>
-                <div id="robot-draw-grid" class="split-btn-grid" data-state="before" onclick="sendDesignToRobot(event)">
-                    <div id="robot-draw-btn" class="before-split-btn split-btn">
-                        <div>SCRIBUS DRAW</div>
-                    </div>
-                    <div id="robot-draw-again-btn" class="after-split-btn split-btn">
-                        <div id="sent-count" style="font-size:60px;">1x</div>
-                        <div class="vl-btn"></div>
-                        <div>+1 DRAWING</div>
+                    <div id="robot-draw-grid" class="split-btn-grid" data-state="before" onclick="sendDesignToRobot(event)">
+                        <div id="robot-draw-btn" class="before-split-btn split-btn">
+                            <div>SCRIBUS<br>DRAW</div>
+                        </div>
+                        <div id="robot-draw-again-btn" class="after-split-btn split-btn">
+                            <div id="sent-count" style="font-size:12vh;">1x</div>
+                            <div>+1 DRAWING</div>
+                        </div>
                     </div>
                 </div>
             </div>
