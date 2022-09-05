@@ -1,6 +1,8 @@
 :root{
+    --lightergreen: #b7ff6b;
     --lightgreen: #92D050;
     --green: #00B050;
+    --darkgreen: #007A37;
     --darkblue: #002060;
     --lightblue: #00B0F0;
     --blue: #2F528F;
@@ -243,7 +245,6 @@ body {
 }
 #smooth-range::-webkit-slider-runnable-track {
     width: 40px;
-    cursor: pointer;
     animate: 0.2s;
     box-shadow: 0px 0px 0px #000000;
     background: #FCA2F0;
@@ -437,12 +438,12 @@ input:checked + .draw-ctrl-btn,
     justify-content: space-around;
 }
 
-#scribe-overlay[data-state="generate_sub"] div[id="scribe-genertate-sub"],
+#scribe-overlay[data-state="generate_sub"] div[id="scribe-generate-sub"],
 #scribe-overlay[data-state="adjust_sub"] div[id="scribe-adjust-sub"] {
     opacity: 1;
     z-index: 1;
 }
-#scribe-overlay[data-state="adjust_sub"] div[id="scribe-genertate-sub"],
+#scribe-overlay[data-state="adjust_sub"] div[id="scribe-generate-sub"],
 #scribe-overlay[data-state="generate_sub"] div[id="scribe-adjust-sub"] {
     opacity: 0;
     z-index: -1;
@@ -452,18 +453,21 @@ textarea {
     font-size: 2em;
     resize: none;
     width: 90%;
-    height: 50%;
+    height: 40vh;
     margin: 5%;
     border-radius: 10px;
+    border: 5px solid var(--green);
 }
 
 #generate-btn {
     font-size: 2em;
-    color: green;
-    width: 50%;
-    height: 2em;
+    color: white;
+    letter-spacing: 20px;
+    width: 90%;
+    height: 15vh;
     text-align: center;
-    background-color: blue;
+    background-color: var(--green);
+    border: 5px solid var(--darkgreen);
     border-radius: 20px;
     display: flex;
     justify-content: center;
@@ -473,24 +477,26 @@ textarea {
 #align-ctrl{
     display: flex;
     align-items: stretch;
-    width: 70%
+    width: 70%;
     height: 10%;
-    border-radius: 4px;
+    border-radius: 10px;
     background-color: blue;
     overflow: hidden;
-
+    border: none;
 }
 #align-ctrl input{
     display: none;
 }
 
 #align-ctrl label{
-    text-align: center;
+    display: flex; justify-content: center; align-items: center;
     margin: 0px;
-    background-color: lightgreen;
+    background-color: var(--lightgreen);
     flex-basis: 0;
     flex-grow: 1;
     flex-shrink: 1;
+    border: none;
+    font-size: 4vh;
 }
 
 #align-ctrl input:checked + label{
@@ -513,10 +519,29 @@ textarea {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
+    background-color: #ffffee;
 }
 
 #ratio-range {
-    width: 60%;
+    -webkit-appearance: none;
+    height: 40px;
+    width: 90%;
+    border-radius: 20px;
+}
+#ratio-range::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    height: 40px;
+    width: 40px;
+    border-radius: 20px;
+    background: var(--darkgreen);
+}
+#ratio-range::-webkit-slider-runnable-track {
+    width: 40px;
+    animate: 0.2s;
+    box-shadow: 0px 0px 0px #000000;
+    background: var(--lightergreen);
+    border-radius: 20px;
+    border: 0px solid #000000;
 }
 
 /* other overlays */
@@ -593,6 +618,12 @@ textarea {
     grid-row: 1;
     grid-column: 1;
     pointer-events: none;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    color: rgb(255 255 255 / 60%);
+    font-size: 3vw;
+    font-weight: bold;
 }
 
 /* FINISH SUBPAGE */

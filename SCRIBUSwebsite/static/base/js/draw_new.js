@@ -17,6 +17,7 @@ let global = {
     'word_lens': [],
     'total_words_len': undefined,
     'word_space_len': 5,
+    'half_border_len': undefined,
 }
 
 
@@ -30,14 +31,6 @@ class pathElement {
         this.rotation = rotation;
         this.scale = scale;
         this.smooth = smooth;
-
-        // Dupliziert den Punkt von Teilpfaden mit nur einem Punkt,
-        // damit 2 verbindendbare Punkte vorhanden sind, da sonst kein Zeichnen möglich
-        for (let partpath of this.path) {
-            if (partpath.length == 1) {
-                partpath.push(partpath[0]);
-            }
-        }
 
         this.min = {'x': Infinity, 'y': Infinity}
         this.max = {'x': -Infinity, 'y': -Infinity}
@@ -60,10 +53,10 @@ class pathElement {
             }
         }
 
-
         // Damit eingefügte Formen sofort zentriert dargestellt werden:
         // Berechnet Abstand des Aktuell festgelegten Koordinatenursprungs zum Mittelpunkt der Form
         let orig_diff = {'x': (this.max.x + this.min.x) / 2, 'y': (this.max.y + this.min.y) / 2};
+
 
         // Verschiebt Extrempunkte um die Differenz
         this.min.x -= orig_diff.x;
@@ -78,6 +71,7 @@ class pathElement {
                 point[1] -= orig_diff.y;
             }
         }
+
         if (translate == 'origin_to_path') {
             this.origin.x = origin.x + orig_diff.x;
             this.origin.y = origin.y + orig_diff.y;
@@ -85,20 +79,7 @@ class pathElement {
             this.origin = origin;
         }
 
-        // increase resolution
-        let factor = 10
-        this.scale /= factor;
-        this.min.x *= factor;
-        this.min.y *= factor;
-        this.max.x *= factor;
-        this.max.y *= factor;
 
-        for (let partpath of this.path) {
-            for (let point of partpath) {
-                point[0] *= factor;
-                point[1] *= factor;
-            }
-        }
     }
 }
 
@@ -120,6 +101,7 @@ const cancelGeneral = () => {
     cards = document.getElementsByClassName("design-card-cvs");
     for (card of cards) {
         card.dataset.state = "default";
+        card.nextElementSibling.innerHTML = card.dataset.name;
     }
 
     // cancel pen
@@ -172,21 +154,17 @@ const okGallery = () => {
     // Bekommt alle aktiven Formen (normalerweise ist das nur eine oder keine)
     let groupedDesigns = document.querySelectorAll('.design-card-cvs[data-state="grouped"]');
     let originalDesigns = document.querySelectorAll('.design-card-cvs[data-state="original"]');
-    console.log(groupedDesigns);
-    console.log(originalDesigns);
-    console.log(global.elements);
+
     for (design of groupedDesigns) {
-        console.log(design.dataset.name);
         let groupedPath = groupElements(JSON.parse(JSON.stringify(global.designs[design.dataset.name])));
         global.elements.push(new pathElement(groupedPath));
     }
     for (design of originalDesigns) {
         let designObject = JSON.parse(JSON.stringify(global.designs[design.dataset.name]));
         for (element of designObject) {
-            global.elements.push(new pathElement(element.path, element.origin));
+            global.elements.push(new pathElement(element.path, element.origin, element.rotation, element.scale, element.smooth));
         }
     }
-        console.log(global.elements);
 
 
     // definiert das letzte zugefügte Element als fokussiertes Element
@@ -202,10 +180,13 @@ const okGallery = () => {
 const toggleDesign = (evt) => {
     if (evt.currentTarget.dataset.state == "default") {
         evt.currentTarget.dataset.state = "grouped";
+        evt.currentTarget.nextElementSibling.innerHTML = "GROUPED";
     } else if (evt.currentTarget.dataset.state == "grouped") {
         evt.currentTarget.dataset.state = "original";
+        evt.currentTarget.nextElementSibling.innerHTML = "ORIGINAL";
     } else {
         evt.currentTarget.dataset.state = "default";
+        evt.currentTarget.nextElementSibling.innerHTML = evt.currentTarget.dataset.name;
     }
 }
 
@@ -246,8 +227,25 @@ const generateHandwriting = (evt) => {
             }
             global.total_words_len = global.word_lens.reduce((total, current) => {return total + current;}, 0) // produce sum
 
+            let rat_rng = document.getElementById("ratio-range");
+
             document.getElementById("left-radio").checked = true;
-            document.getElementById("ratio-range").value = 50;
+            rat_rng.value = 50;
+
+            let max_word_len = Math.max(...global.word_lens)
+            let max_line_num = 1;
+            let current_len = 0;
+            for (let l of global.word_lens) {
+                current_len += l;
+                if (current_len > max_word_len) {
+                    max_line_num++;
+                    current_len = l;
+                }
+            }
+            rat_rng.min = global.std_line_height / global.total_words_len;
+            rat_rng.max = global.std_line_height * max_line_num / max_word_len;
+
+            global.half_border_len = document.getElementById("adjust-cvs-placeholder").offsetWidth;
 
             updateAdjustCvs();
             document.getElementById("scribe-overlay").dataset.state = "adjust_sub"
@@ -259,14 +257,15 @@ const generateHandwriting = (evt) => {
 
 const updateAdjustCvs = () => {
     let adCvs = document.getElementById("adjust-cvs");
-    let ratio = document.getElementById("ratio-range").value;
-    let border_len = adCvs.parentElement.offsetWidth;
 
-    adCvs.style.width = border_len/(ratio+1);
-    adCvs.style.height = adCvs.style.width * ratio;
+    let align = document.querySelector('input[name="align"]:checked').value;
 
-    adCvs.width = adCvs.style.width;
-    adCvs.height = adCvs.style.height;
+    let ratio = document.getElementById("ratio-range").value; // TODO probably needs an logarithmation
+    adCvs.style.width = (global.half_border_len / (parseFloat(ratio) + 1)).toString()+"px";
+    adCvs.style.height = (parseFloat(adCvs.style.width) * ratio).toString()+"px";
+
+    adCvs.width = adCvs.style.width.slice(0, -2);
+    adCvs.height = adCvs.style.height.slice(0, -2);
 
     // calculate min line number
     let n_lines = Math.floor(Math.sqrt((global.total_words_len*adCvs.height)/(global.std_line_height*adCvs.width)));
@@ -283,15 +282,29 @@ const updateAdjustCvs = () => {
         for (let i=0; i<n_lines; i++) { // for each line fill it with words
             let line_y = global.std_line_height*i + global.std_line_height / 2;
             let line_len = 0;
+            let n_words = 0;
             do { // while line isn't full add another word
 
                 if (line_len != 0) {  // if its not the first word add a space
                     line_len += global.word_space_len;
                 }
 
-                // position and scale currend word
+                // position and scale current word
                 global.words[current_word_idx].scale = scale;
-                global.words[current_word_idx].origin.x = (line_len + word_lens[0]/2) * scale;
+
+                if (align == "left") {
+                    global.words[current_word_idx].origin.x = (line_len + word_lens[0]/2) * scale;
+                } else if (align == "right") {
+                    global.words[current_word_idx].origin.x = parseFloat(adCvs.width) - ((line_len + word_lens[0]/2) * scale);
+                } else {
+                    let current_word_len = global.word_lens[current_word_idx];
+                    global.words[current_word_idx].origin.x = parseFloat(adCvs.width)/2 + line_len/2;
+                    for (let i=1; i<=n_words; i++) {
+                        global.words[current_word_idx-i].origin.x -= current_word_len/2;
+                    }
+                    // reduce all originx of words of this line by the half width of the current word
+                    n_words++;
+                }
                 global.words[current_word_idx].origin.y = line_y * scale;
                 current_word_idx++;
 
@@ -399,16 +412,18 @@ const createPopup = (buttons, onclicks, colors) => {
 
 const groupElements = (elements) => {
     let els = JSON.parse(JSON.stringify(elements));
-    let groupedPath = []
+    let groupedPath = [];
     // relates all points to global origin and appends them to the groupedPath
     for (el of els) {
         for (let partpath of el.path) {
             groupedPath.push([]);
             for (let point of partpath) {
-                groupedPath[groupedPath.length-1].push([point[0] + el.origin.x, point[1] += el.origin.y]);
+                let poc = getPointOnCvs({"x":point[0], "y":point[1]}, el);
+                groupedPath[groupedPath.length-1].push([poc.x, poc.y]);
             }
         }
     }
+    console.log(groupedPath);
     return groupedPath
 }
 
@@ -516,6 +531,9 @@ const Tstart = (evt) => {
     // Verhindert, dass das Touchevent anders als hier definiert Wirkung zeigt (z.B. scrollen)
     evt.preventDefault();
 
+    // Um später feststellen zu können, ob es ein click oder ein move ist
+    global.touchHasNotMoved = true;
+
     // Bekommt Liste von Touch-Objekten, die durch aktuelles Touch-Event verändert wurden
     // (normalerweise nur ein Touch-Objekt)
     let touches = evt.changedTouches;
@@ -534,22 +552,19 @@ const Tstart = (evt) => {
         if (global.drawnEl == undefined) {
             // Fügt ein neues Element zur elements_list hinzu
             // ohne Pfad, mit Koordinatenursprung am aktuellen Touch
-            global.elements.push(new pathElement(undefined, {'x': global.posOnCvs.x, 'y': global.posOnCvs.y}, 0, 10, 1));
+            global.elements.push(new pathElement(undefined, {'x': global.posOnCvs.x, 'y': global.posOnCvs.y}, 0, 1, 1));
             // Definiert das neu hinzugefügte Element als das, das gerade gezeichnet wird
             global.drawnEl = global.elements[global.elements.length - 1];
+        } else {
+            // Fügt einen neuen, leeren Teilpfad zum gerade gezeichneten Element hinzu
+            global.drawnEl.path.push([]);
+            // Fügt die aktuelle Touchposition als ersten Punkt zum Teilpfad hinzu
+            addPointToFreehand(getPointOnEl(global.posOnCvs, global.drawnEl));
         }
-
-        // Fügt einen neuen, leeren Teilpfad zum gerade gezeichneten Element hinzu
-        global.drawnEl.path.push([]);
-        // Fügt die aktuelle Touchposition als ersten Punkt zum Teilpfad hinzu
-        addPointToFreehand(getPointOnEl(global.posOnCvs, global.drawnEl));
 
     // Wenn Freihand nicht aktiv --> der Touch will Elemente Verändern (verschieben, skalieren+rotieren, löschen),
     // kann ein click oder ein move sein
     } else {
-        // Um später feststellen zu können, ob es ein click oder ein move ist
-        global.touchHasNotMoved = true;
-
         // Wenn es ein move sein sollte, festgelegt sein,
         // was genau der move machen will(verschieben, skalieren, rotieren)
 
@@ -588,6 +603,12 @@ const Tmove = (evt) => {
     // Verhindert, dass das Touchevent anders als hier definiert Wirkung zeigt (z.B. scrollen)
     evt.preventDefault();
 
+    // Wenn der Touch vorher noch nich bewegt wurde:
+    if (global.touchHasNotMoved) {
+        // Definiert, dass der Touch bewegt wurde
+        global.touchHasNotMoved = false;
+    }
+
     // Bekommt Liste von Touch-Objekten, die durch aktuelles Touch-Event verändert wurden
     // (normalerweise nur ein Touch-Objekt)
     let touches = evt.changedTouches;
@@ -602,12 +623,6 @@ const Tmove = (evt) => {
 
     // Wenn Freihand nicht aktiv --> der Touch ist ein move will Elemente Verändern -->(verschieben, skalieren+rotieren)
     } else {
-        // Wenn der Touch vorher noch nich bewegt wurde:
-        if (global.touchHasNotMoved) {
-            // Definiert, dass der Touch bewegt wurde
-            global.touchHasNotMoved = false;
-        }
-
         // Wenn Touch verschieben will:
         if (global.touchMoveAction == 'pan') {
             // Verschiebt den Koordinatenursprung des fokussierten elements genau so,
@@ -659,7 +674,11 @@ const Tend = (evt) => {
 
     // Wenn Freihandzeihnen aktiv und der Touch endet: Tut garnichts
     if (document.getElementById('pen').checked) {
-
+        if (global.touchHasNotMoved) {
+            console.log("touchHasNotMoved");
+            let partpath = global.drawnEl.path[global.drawnEl.path.length-1];
+            partpath.push(partpath[0]);
+        }
     // Wenn der Touch sich nicht bewegt hat, also ein click war:
     } else if (global.touchHasNotMoved) {
         //-->if element was clicked make it focused, if delete button on focused element was clicked remove it from global.elements

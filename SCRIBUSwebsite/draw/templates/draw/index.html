@@ -24,7 +24,7 @@ const robodraw_url = "{% url 'draw:robodraw' %}"
                 <img class="icon" src="{% static 'imgs/scribe.svg' %}">
                 <img class="icon-checked" src="{% static 'imgs/scribe_checked.svg' %}">
             </label>
-            <div id="scribe-overlay" class="overlay" data-state="generate_sub">
+            <div id="scribe-overlay" class="overlay" data-state="adjust_sub">
                 <div id="scribe-generate-sub">
                     <textarea id="scribe-text-input" name="scribe-text-input" placeholder="Here goes the text you want SCRIBUS to write!" oninput="updateTextWarning(event)"></textarea>
                     <p id="text-warning"></p>
@@ -42,7 +42,7 @@ const robodraw_url = "{% url 'draw:robodraw' %}"
                     <div id="adjust-cvs-placeholder">
                         <canvas id="adjust-cvs" width=1000 height=1000></canvas>
                     </div>
-                    <input type="range" id="ratio-range" name="ratio-range" min="0" max="100" oninput="updateAdjustCvs()">
+                    <input type="range" id="ratio-range" name="ratio-range" step="0.01" min="0.5" max="2" oninput="updateAdjustCvs()">
                 </div>
             </div>
 
@@ -75,7 +75,7 @@ const robodraw_url = "{% url 'draw:robodraw' %}"
                     {% for design in designs.all %}
                         <div class="card-layer-grid">
                             <canvas id="{{ design.name }}-design" class="card-cvs design-card-cvs" width=1000 height=1000 data-name="{{ design.name }}" data-state="default" onclick="toggleDesign(event)"></canvas>
-                            <div class="card-overlay" data-state="off">{{ design.name }}</div>
+                            <div class="card-overlay">{{ design.name }}</div>
                         </div>
                         <script>
                             global.designs['{{ design.name }}'] = {{ design.elements|safe }}.map(function (el) {
