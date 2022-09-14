@@ -227,10 +227,10 @@ const generateHandwriting = (evt) => {
             }
             global.total_words_len = global.word_lens.reduce((total, current) => {return total + current;}, 0) // produce sum
 
-            let rat_rng = document.getElementById("ratio-range");
+            let x_rng = document.getElementById("adjust-x-range");
 
             document.getElementById("left-radio").checked = true;
-            rat_rng.value = 50;
+            x_rng.value = 50;
 
             let max_word_len = Math.max(...global.word_lens)
             let max_line_num = 1;
@@ -242,10 +242,11 @@ const generateHandwriting = (evt) => {
                     current_len = l;
                 }
             }
-            rat_rng.min = global.std_line_height / global.total_words_len;
-            rat_rng.max = global.std_line_height * max_line_num / max_word_len;
 
             global.half_border_len = document.getElementById("adjust-cvs-placeholder").offsetWidth;
+            x_rng.min = global.half_border_len / ((global.total_words_len / global.std_line_height) +1) ;
+            x_rng.max = global.half_border_len / ((max_word_len / (global.std_line_height * max_line_num)) +1) ;  ;
+
 
             updateAdjustCvs();
             document.getElementById("scribe-overlay").dataset.state = "adjust_sub"
@@ -260,12 +261,14 @@ const updateAdjustCvs = () => {
 
     let align = document.querySelector('input[name="align"]:checked').value;
 
-    let ratio = document.getElementById("ratio-range").value; // TODO probably needs an logarithmation
-    adCvs.style.width = (global.half_border_len / (parseFloat(ratio) + 1)).toString()+"px";
-    adCvs.style.height = (parseFloat(adCvs.style.width) * ratio).toString()+"px";
+    let adjust_x = document.getElementById("adjust-x-range").value + "px";
+    let adjust_y = global.half_border_len - adjust_x + "px";
 
-    adCvs.width = adCvs.style.width.slice(0, -2);
-    adCvs.height = adCvs.style.height.slice(0, -2);
+    adCvs.style.width = adjust_x;
+    adCvs.style.height = adjust_y;
+
+    adCvs.width = adjust_x;
+    adCvs.height = adjust_y;
 
     // calculate min line number
     let n_lines = Math.floor(Math.sqrt((global.total_words_len*adCvs.height)/(global.std_line_height*adCvs.width)));
