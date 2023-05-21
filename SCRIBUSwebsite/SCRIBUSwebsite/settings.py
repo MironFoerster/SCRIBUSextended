@@ -35,7 +35,7 @@ SECRET_KEY = 'uq5^cau%z%+m)vlie4l-ke)hzbvjw#a-&vw=sf^0dgn#et136j'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['192.168.2.111', '127.0.0.1', 'scribus', '192.168.2.113']#["192.168.2.10", "www.scribusweb.de"]
+ALLOWED_HOSTS = ['192.168.2.106', '127.0.0.1', 'scribus', '192.168.2.113']#["192.168.2.10", "www.scribusweb.de"]
 
 
 # Application definition

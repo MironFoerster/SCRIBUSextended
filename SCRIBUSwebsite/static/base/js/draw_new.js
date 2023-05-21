@@ -13,10 +13,10 @@ let global = {
     'shapes': {},
     'designs': {},
     'words': [],
-    'std_line_height': 15,
+    'std_line_height': 400,
     'word_lens': [],
     'total_words_len': undefined,
-    'word_space_len': 5,
+    'word_space_len': 150,
     'half_border_len': undefined,
 }
 
@@ -218,8 +218,8 @@ const generateHandwriting = (evt) => {
         .then(response => response.json())
         .then(wordsData => {
             // Fügt den erhaltenen Formpfad als neues Element zur elements_list hinzu
-            for (word of wordsData.words) {
-                global.words.push(new pathElement(word.path));
+            for (word_path of wordsData.words) {
+                global.words.push(new pathElement(word_path));
             }
 
             for (word of global.words) {
@@ -230,10 +230,11 @@ const generateHandwriting = (evt) => {
             let x_rng = document.getElementById("adjust-x-range");
 
             document.getElementById("left-radio").checked = true;
-            x_rng.value = 50;
+            //x_rng.value = 50;
 
             let max_word_len = Math.max(...global.word_lens)
-            let max_line_num = 1;
+            let max_line_num = global.word_lens.length;
+            /*let max_line_num = 1;
             let current_len = 0;
             for (let l of global.word_lens) {
                 current_len += l;
@@ -241,15 +242,19 @@ const generateHandwriting = (evt) => {
                     max_line_num++;
                     current_len = l;
                 }
-            }
+            }*/
 
             global.half_border_len = document.getElementById("adjust-cvs-placeholder").offsetWidth;
-            x_rng.min = global.half_border_len / ((global.total_words_len / global.std_line_height) +1) ;
+            /*x_rng.min = global.half_border_len / ((global.total_words_len / global.std_line_height) +1) ;
             x_rng.max = global.half_border_len / ((max_word_len / (global.std_line_height * max_line_num)) +1) ;  ;
+            */
+            // x_canvas = x_words*half_border_len/(y_words + x_words)
+            x_rng.min = max_word_len * global.half_border_len / (global.std_line_height * max_line_num + max_word_len) ;
+            x_rng.max = global.total_words_len * global.half_border_len / (global.std_line_height + global.total_words_len) ;  ;
 
 
             updateAdjustCvs();
-            document.getElementById("scribe-overlay").dataset.state = "adjust_sub"
+            document.getElementById("scribe-overlay").dataset.state = "adjust_sub";
         });
     } else {
         textInput.focus()
@@ -257,37 +262,42 @@ const generateHandwriting = (evt) => {
 }
 
 const updateAdjustCvs = () => {
+    console.log("update");
     let adCvs = document.getElementById("adjust-cvs");
 
     let align = document.querySelector('input[name="align"]:checked').value;
 
-    let adjust_x = document.getElementById("adjust-x-range").value + "px";
-    let adjust_y = global.half_border_len - adjust_x + "px";
-
-    adCvs.style.width = adjust_x;
-    adCvs.style.height = adjust_y;
-
+    let adjust_x = document.getElementById("adjust-x-range").value;
+    let adjust_y = global.half_border_len - adjust_x;
     adCvs.width = adjust_x;
     adCvs.height = adjust_y;
+    adCvs.style.width = adjust_x + "px";
+    adCvs.style.height = adjust_y + "px";
+
+    
 
     // calculate min line number
-    let n_lines = Math.floor(Math.sqrt((global.total_words_len*adCvs.height)/(global.std_line_height*adCvs.width)));
+    //let n_lines = Math.floor(Math.sqrt((global.total_words_len*adCvs.height)/(global.std_line_height*adCvs.width)));
+    //n_lines = 1;
+    //let fits = false;
 
-    let fits = false;
     // find the fitting number of lines
-    while (!fits) { // increase line number until it fits
-        n_lines++;
+    for (let n_lines=1; n_lines<=global.words.length; n_lines++) { // increase line number until it fits
+        
         let word_lens = JSON.parse(JSON.stringify(global.word_lens)); // copies array
         let line_height = adCvs.height / n_lines;
         let scale = line_height / global.std_line_height;
         let current_word_idx = 0;
+        console.log("lines: "+ n_lines);
 
         for (let i=0; i<n_lines; i++) { // for each line fill it with words
+            console.log("lin: " + i);
+            if (current_word_idx == global.words.length) {break;}
             let line_y = global.std_line_height*i + global.std_line_height / 2;
             let line_len = 0;
             let n_words = 0;
             do { // while line isn't full add another word
-
+                console.log("word: " + current_word_idx);
                 if (line_len != 0) {  // if its not the first word add a space
                     line_len += global.word_space_len;
                 }
@@ -298,12 +308,19 @@ const updateAdjustCvs = () => {
                 if (align == "left") {
                     global.words[current_word_idx].origin.x = (line_len + word_lens[0]/2) * scale;
                 } else if (align == "right") {
-                    global.words[current_word_idx].origin.x = parseFloat(adCvs.width) - ((line_len + word_lens[0]/2) * scale);
-                } else {
-                    let current_word_len = global.word_lens[current_word_idx];
-                    global.words[current_word_idx].origin.x = parseFloat(adCvs.width)/2 + line_len/2;
+                    global.words[current_word_idx].origin.x = parseFloat(adCvs.width) - word_lens[0]*scale/2;
                     for (let i=1; i<=n_words; i++) {
-                        global.words[current_word_idx-i].origin.x -= current_word_len/2;
+                        global.words[current_word_idx-i].origin.x -= (word_lens[0]+global.word_space_len)*scale;
+                    }
+                    // reduce all originx of words of this line by the half width of the current word
+                    n_words++;
+                } else {
+                    global.words[current_word_idx].origin.x = parseFloat(adCvs.width)/2;
+                    if (line_len != 0) {
+                        global.words[current_word_idx].origin.x += line_len*scale/2;
+                    }
+                    for (let i=1; i<=n_words; i++) {
+                        global.words[current_word_idx-i].origin.x -= (word_lens[0]+global.word_space_len)*scale/2;
                     }
                     // reduce all originx of words of this line by the half width of the current word
                     n_words++;
@@ -316,14 +333,17 @@ const updateAdjustCvs = () => {
             } while (scale * (line_len + word_lens[0] + global.word_space_len) <= adCvs.width)
         }
         if (word_lens.length == 0) {
-            fits = true;
+            //fits = true;
+            break;
         }
+        //n_lines++;
     }
 
     drawCvs("adjust-cvs", global.words, controls=false);
 }
 
 const okScribe = () => {
+    document.getElementById("scribe-overlay").dataset.state = "generate_sub";
     scribing = groupElements(global.words);
     global.elements.push(new pathElement(scribing));
     global.words = [];
